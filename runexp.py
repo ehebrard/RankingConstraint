@@ -20,7 +20,7 @@ parser.add_argument('--seed',type=int,default=1,help='random seed')
 args = parser.parse_args()
     
     
-chococmd = ['java', '-cp', 'lib/choco-solver-3.3.1.jar:out:.', 'RankingExperiment', args.file, args.show, str(args.time), str(args.node), str(args.seed)]
+chococmd = ['java', '-cp', 'lib/choco-solver-3.3.1.jar:lib/trove-3.0.0.jar:out:.', 'RankingExperiment', args.file, args.show, str(args.time), str(args.node), str(args.seed)]
 
 print 'run Choco [', ' '.join(chococmd), ']'
 choco = subprocess.Popen(chococmd)
