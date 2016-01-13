@@ -1,1 +1,1 @@
-# RankingConstraint
+# RankingConstraint, a constraint for ranking!
