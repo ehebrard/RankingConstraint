@@ -8,7 +8,7 @@ OUT = out
 
 #JFLAGS = -g -cp /Users/ehebrard/.m2/repository/colt/colt/1.0.3/colt-1.0.3.jar:./lib/choco-solver-3.3.1.jar:./lib/trove-3.0.0.jar:lib/slf4j-1.7.13/slf4j-simple-1.7.13.jar:lib/slf4j-1.7.13/slf4j-api-1.7.13.jar:.
 #JFLAGS = -g -cp $(LIB)/colt-1.0.3.jar:$(LIB)/choco-solver-3.3.1.jar:$(LIB)/trove-3.0.0.jar:$(LIB)/slf4j-1.7.13/slf4j-simple-1.7.13.jar:$(LIB)/slf4j-1.7.13/slf4j-api-1.7.13.jar:.
-JFLAGS = -g -cp $(LIB)/choco-solver-3.3.1.jar:lib/trove-3.0.0.jar:.
+JFLAGS = -g -cp $(LIB)/choco-solver-3.3.1.jar:lib/trove-3.0.0.jar:lib/slf4j-1.7.13/slf4j-simple-1.7.13.jar:lib/slf4j-1.7.13/slf4j-api-1.7.13.jar:.
 JC = javac
 
 # -Xlint:unchecked

@@ -44,22 +44,95 @@ import org.chocosolver.util.objects.setDataStructures.SetType;
 import org.chocosolver.util.tools.ArrayUtils;
 
 /**
- * Propagator for the Ranking Constraint (GCC) 
+ * Propagator for the Ranking Constraint (BC or RC) 
  *
- * @author Emmanuel Hebrard
+ * @author Emmanuel Hebrard, George Katsirelos
  */
 public class PropRanking extends Propagator<IntVar> {
 
-	private ConsistencyType constype;
+	protected boolean enforceRC;
 	
-	public PropRanking(IntVar[] vars, ConsistencyType c) {
+	protected IntVar[] increasingUpperBoundVars;
+	protected IntVar[] increasingLowerBoundVars;
+	
+	protected int[] count;
+	
+	protected int[][] rules;
+	protected int num_rules;
+	
+	
+	private void sortByIncreasingUpperBound() {
+		for(int i=0; i<vars.length; i++) {
+			count[vars[i].getUB()]++;
+		}
+		int total = 0;
+		for(int i=1; i<vars.length; i++) {
+			int oldcount = count[i];
+			count[i] = total;
+			total += oldcount;
+		}
+		for(int i=0; i<vars.length; i++) {
+			increasingUpperBoundVars[count[vars[i].getUB()]++] = vars[i];
+		}
+	}
+	
+	private void sortByIncreasingLowerBound() {
+		for(int i=0; i<vars.length; i++) {
+			count[vars[i].getUB()]++;
+		}
+		int total = 0;
+		for(int i=1; i<vars.length; i++) {
+			int oldcount = count[i];
+			count[i] = total;
+			total += oldcount;
+		}
+		for(int i=0; i<vars.length; i++) {
+			increasingLowerBoundVars[count[vars[i].getUB()]++] = vars[i];
+		}
+	}
+	
+	
+	
+	public PropRanking(IntVar[] vars, boolean rc) {
 		super(vars, PropagatorPriority.LINEAR, true);
-		constype = c;
+		enforceRC = rc;
+		
+		count = new int[vars.length];
+		rules = new int[vars.length][2];
+		increasingUpperBoundVars = new IntVar[vars.length];
+		increasingLowerBoundVars = new IntVar[vars.length];
+		for(int i=0; i<vars.length; ++i) {
+			increasingUpperBoundVars[i] = vars[i];
+			increasingLowerBoundVars[i] = vars[i];
+		}
 	}
 	
   @Override
   public ESat isEntailed() {
 		return ESat.FALSE;
+	}
+	
+	
+	private void upperBoundPruning() throws ContradictionException {
+		sortByIncreasingLowerBound();
+		int last = 0;
+		for(int j=0; j<vars.length; j++) {
+			int lb = increasingLowerBoundVars[j].getLB()-1;
+			if(lb > j) this.contradiction(null, "impossible");
+			if(lb == j) {
+				while(last++ < j) {
+					increasingLowerBoundVars[last].updateUpperBound(j, aCause);
+				}
+			}
+		}
+	}
+	
+	private void lowerBoundPruning() throws ContradictionException {
+		
+	}
+	
+	private void disentailmentAndPruning() throws ContradictionException {
+		
 	}
 	
   @Override
