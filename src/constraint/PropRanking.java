@@ -198,10 +198,16 @@ public class PropRanking extends Propagator<IntVar> {
 			
 			int maxXj = increasingLowerBoundVars[j].getUB();
 			int minXj = increasingLowerBoundVars[j].getLB();
+						
 			while( rule[u][1] >= maxXj && l>0 && rule[l][0] > minXj ) {
 				l--;
-				if(rule[l][1] < rule[l+1][0]) u = l;
+				if(rule[l][1] < rule[l+1][0]-1) u = l;
 			}
+			
+			if(verbose) {
+				System.out.println("Check if " + increasingLowerBoundVars[j].toString() + " is culprit for rules [" + rule[l][0] + "," + rule[u][1] + "]");
+			}
+			
 			
 			if( minXj>=rule[l][0] && maxXj<=rule[u][1] ) {
 			
@@ -301,7 +307,11 @@ public class PropRanking extends Propagator<IntVar> {
 		if(num_pruning>0) {
 			
 			if(verbose) {
-				System.out.println("pruning:");
+				System.out.print("pruning:");
+				for(int j=0; j<num_pruning; j++) {
+					System.out.print(" [" + pruning[j][0] + "," + pruning[j][1] + "]");
+				}
+				System.out.println();
 			}
 			
 			for(int i=0; i<vars.length; i++) {
