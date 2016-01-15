@@ -255,7 +255,7 @@ public class PropRanking extends Propagator<IntVar> {
 				System.out.println("  " + Xi.second.toString());
 			}
 			
-			// compute the set M of variables which we won't be able to assign to a "k" value 
+			// compute the set M of variables which we won't be able to assign to a new "k" value 
 			while( !sortedVars.isEmpty()	&& sortedVars.peek().first < nxt_k ) {
 				Tuple< Integer, IntVar > Xj = sortedVars.remove();
 
