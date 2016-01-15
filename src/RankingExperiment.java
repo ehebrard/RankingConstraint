@@ -72,9 +72,19 @@ public class RankingExperiment {
 			solver.post(ICF.distance(X[i], Y[i], "=", D[i]));
 		}
 		
-		int maxD = N*N/2;
+		int maxD = N*N;
+		
 		if(!perm) {
-			maxD = (3*N/2-1)*N/2;
+			//maxD = (3*N/2-1)*N/2;
+			if((N%2)>0)
+				maxD = (3*N/2-1)*N/2;
+			else {
+				System.out.println("TODO");
+				System.exit(1);
+			}
+		} else {
+			if((maxD%2)>0) maxD++;
+			maxD /= 2;
 		}
 		
 		IntVar Distance = VF.bounded("TotalDistance", 0, maxD, solver);
@@ -103,7 +113,7 @@ public class RankingExperiment {
 		} 
 		
 		Chatterbox.showSolutions(solver);
-		Chatterbox.showDecisions(solver);
+		//Chatterbox.showDecisions(solver);
 		
 		//solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
 		

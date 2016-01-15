@@ -54,6 +54,7 @@ import util.Tuple;
 public class PropRanking extends Propagator<IntVar> {
 	
 	private static boolean verbose = false;
+	private static boolean trace = true;
 
 	protected boolean enforceRC;
 	
@@ -143,6 +144,15 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 		
 		sortByIncreasingLowerBound();
+		
+		if(trace) {
+			for(int j=0; j<vars.length; j++) {
+				System.out.print( " " + increasingLowerBoundVars[j].toString() );
+			}
+			System.out.println();
+		}
+		
+		
 		int last = 0;
 		for(int j=0; j<vars.length; j++) {
 			int lb = increasingLowerBoundVars[j].getLB()-1;
@@ -154,7 +164,7 @@ public class PropRanking extends Propagator<IntVar> {
 						System.out.println("upper bound pruning: " + increasingUpperBoundVars[last].toString() + " <= " + j);
 					}
 					
-					increasingLowerBoundVars[last].updateUpperBound(j, aCause);
+					increasingLowerBoundVars[last].updateUpperBound(j+1, aCause);
 				}
 			}
 		}
@@ -327,6 +337,14 @@ public class PropRanking extends Propagator<IntVar> {
 		upperBoundPruning();
 		disentailmentAndPruning();
 		lowerBoundPruning();
+		
+		if(trace) {
+			for(int j=0; j<vars.length; j++) {
+				System.out.print( " " + increasingLowerBoundVars[j].toString() );
+			}
+			System.out.println();
+		}
+		
 	}
 	
 	
