@@ -53,7 +53,7 @@ import util.Tuple;
 */
 public class PropRanking extends Propagator<IntVar> {
 	
-	private static boolean verbose = true;
+	private static boolean verbose = false;
 
 	protected boolean enforceRC;
 	
@@ -78,16 +78,16 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 		
 		for(int i=0; i<vars.length; i++) {
-			count[vars[i].getUB()]++;
+			count[vars[i].getUB()-1]++;
 		}
 		int total = 0;
-		for(int i=1; i<vars.length; i++) {
+		for(int i=0; i<vars.length; i++) {
 			int oldcount = count[i];
 			count[i] = total;
 			total += oldcount;
 		}
 		for(int i=0; i<vars.length; i++) {
-			increasingUpperBoundVars[count[vars[i].getUB()]++] = vars[i];
+			increasingUpperBoundVars[count[vars[i].getUB()-1]++] = vars[i];
 		}
 		for(int i=0; i<vars.length; i++) {
 			count[i] = 0;
@@ -109,16 +109,17 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 		
 		for(int i=0; i<vars.length; i++) {
-			count[vars[i].getLB()]++;
+			count[vars[i].getLB()-1]++;
 		}
 		int total = 0;
-		for(int i=1; i<vars.length; i++) {
+		for(int i=0; i<vars.length; i++) {
 			int oldcount = count[i];
 			count[i] = total;
 			total += oldcount;
 		}
+		
 		for(int i=0; i<vars.length; i++) {
-			increasingLowerBoundVars[count[vars[i].getLB()]++] = vars[i];
+			increasingLowerBoundVars[count[vars[i].getLB()-1]++] = vars[i];
 		}
 		for(int i=0; i<vars.length; i++) {
 			count[i] = 0;
@@ -134,7 +135,7 @@ public class PropRanking extends Propagator<IntVar> {
 	
 	
 	public PropRanking(IntVar[] vars, boolean rc) {
-		super(vars, PropagatorPriority.LINEAR, true);
+		super(vars, PropagatorPriority.LINEAR, false);
 		enforceRC = rc;
 		
 		count = new int[vars.length];
@@ -211,7 +212,7 @@ public class PropRanking extends Propagator<IntVar> {
 			
 			if( minXj>=rule[l][0] && maxXj<=rule[u][1] ) {
 			
-				while( rule[u][1] >= maxXj ) u--;
+				while( u>0 && rule[u-1][1] >= maxXj ) u--;
 				
 				while( last >=  rule[u][1] ) {
 					
@@ -253,7 +254,7 @@ public class PropRanking extends Propagator<IntVar> {
 			nxt_k = k+1;
 			
 			// add variables whose domain contains k in the binary heap
-			while( ilb_ptr < vars.length && increasingLowerBoundVars[ilb_ptr].getLB()<=k ) {
+			while( ilb_ptr < vars.length && increasingLowerBoundVars[ilb_ptr].getLB()<=k ) {	
 				Tuple< Integer, IntVar > t = new Tuple< Integer, IntVar >( increasingLowerBoundVars[ilb_ptr].getUB(), increasingLowerBoundVars[ilb_ptr] );
 				sortedVars.add(t);
 				ilb_ptr++;
@@ -265,21 +266,30 @@ public class PropRanking extends Propagator<IntVar> {
 			}
 			
 			Tuple< Integer, IntVar > Xi = sortedVars.remove();
-			
+
 			if(verbose) {
 				System.out.println("  " + Xi.second.toString());
 			}
 			
-			
-			while(nxt_k <= vars.length && sortedVars.peek().first < nxt_k) {
-				Tuple< Integer, IntVar > Xj = sortedVars.remove();
-				if(Xj.first < k) this.contradiction(null, "impossible");
-				nxt_k++;
+			//if(!sortedVars.isEmpty()) {
+				while(
+					
+					!sortedVars.isEmpty()
+					
+					//nxt_k <= vars.length 
 				
-				if(verbose) {
-					System.out.println("  " + Xj.second.toString() + "(" + nxt_k + ")");
+				&& sortedVars.peek().first < nxt_k) {
+					Tuple< Integer, IntVar > Xj = sortedVars.remove();
+
+					if(Xj.first < k) this.contradiction(null, "impossible");
+					nxt_k++;
+				
+					if(verbose) {
+						System.out.println("  " + Xj.second.toString() + "(" + nxt_k + ")");
+					}
+
 				}
-			}
+				//}
 			
 			if(Xi.first == k) {
 				

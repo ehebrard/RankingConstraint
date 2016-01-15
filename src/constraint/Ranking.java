@@ -57,6 +57,10 @@ public class Ranking extends Constraint {
     public Ranking(IntVar[] vars, String type) {
         super("Ranking", createProp(vars, type));
     }
+		
+    public Ranking(IntVar[] vars) {
+        super("Ranking", createProp(vars, "RC"));
+    }
 
 	private static Propagator createProp(IntVar[] vars, String consistency) {
 		if(vars.length==1){
