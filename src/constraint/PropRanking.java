@@ -72,11 +72,7 @@ public class PropRanking extends Propagator<IntVar> {
 	
 	
 	private void sortByIncreasingUpperBound() {
-		
-		if(verbose) {
-			System.out.println("increasing UB sort");
-		}
-		
+
 		for(int i=0; i<vars.length; i++) {
 			count[vars[i].getUB()-1]++;
 		}
@@ -93,21 +89,10 @@ public class PropRanking extends Propagator<IntVar> {
 			count[i] = 0;
 		}
 		
-		
-		if(verbose) {
-			for(int i=0; i<vars.length; i++) {
-				System.out.println(increasingUpperBoundVars[i].toString());
-			}
-		}
-		
 	}
 	
 	private void sortByIncreasingLowerBound() {
-		
-		if(verbose) {
-			System.out.println("increasing LB sort");
-		}
-		
+	
 		for(int i=0; i<vars.length; i++) {
 			count[vars[i].getLB()-1]++;
 		}
@@ -124,12 +109,7 @@ public class PropRanking extends Propagator<IntVar> {
 		for(int i=0; i<vars.length; i++) {
 			count[i] = 0;
 		}
-		
-		if(verbose) {
-			for(int i=0; i<vars.length; i++) {
-				System.out.println(increasingLowerBoundVars[i].toString());
-			}
-		}
+
 	}
 	
 	
@@ -197,23 +177,27 @@ public class PropRanking extends Propagator<IntVar> {
 		
 		for(int j=vars.length-1; j>=0; j--) {
 			
+			// check if the variable with j-th highest lower bound is a culprit w.r.t. some rules
 			int maxXj = increasingLowerBoundVars[j].getUB();
 			int minXj = increasingLowerBoundVars[j].getLB();
 						
+			// decrease the pointer to the first rule 
 			while( rule[u][1] >= maxXj && l>0 && rule[l][0] > minXj ) {
 				l--;
-				if(rule[l][1] < rule[l+1][0]-1) u = l;
+				if(rule[l][1] < rule[l+1][0]-1) u = l; // jump if there is a gap
 			}
 			
 			if(verbose) {
 				System.out.println("Check if " + increasingLowerBoundVars[j].toString() + " is culprit for rules [" + rule[l][0] + "," + rule[u][1] + "]");
 			}
 			
-			
+			// Xj is a culprit for the rules from l to u
 			if( minXj>=rule[l][0] && maxXj<=rule[u][1] ) {
 			
+				// tightens u
 				while( u>0 && rule[u-1][1] >= maxXj ) u--;
 				
+				// enforce pruning
 				while( last >=  rule[u][1] ) {
 					
 					if(verbose) {
@@ -271,36 +255,35 @@ public class PropRanking extends Propagator<IntVar> {
 				System.out.println("  " + Xi.second.toString());
 			}
 			
-			//if(!sortedVars.isEmpty()) {
-				while(
-					
-					!sortedVars.isEmpty()
-					
-					//nxt_k <= vars.length 
-				
-				&& sortedVars.peek().first < nxt_k) {
-					Tuple< Integer, IntVar > Xj = sortedVars.remove();
+			// compute the set M of variables which we won't be able to assign to a "k" value 
+			while( !sortedVars.isEmpty()	&& sortedVars.peek().first < nxt_k ) {
+				Tuple< Integer, IntVar > Xj = sortedVars.remove();
 
-					if(Xj.first < k) this.contradiction(null, "impossible");
-					nxt_k++;
+				if(Xj.first < k) this.contradiction(null, "impossible");
+				nxt_k++;
 				
-					if(verbose) {
-						System.out.println("  " + Xj.second.toString() + "(" + nxt_k + ")");
-					}
-
+				if(verbose) {
+					System.out.println("  " + Xj.second.toString() + "(" + nxt_k + ")");
 				}
-				//}
+
+			}
 			
-			if(Xi.first == k) {
-				
+			
+			if(Xi.first == k) { // rule and possible pruning
+					
 				if(verbose) {
 					System.out.println("learn a rule <" + (k+1) + "," + nxt_k + ">");
 				}
 				
+				// the rule
 				rule[num_rule][0] = k+1;
 				rule[num_rule][1] = nxt_k;
+				
+				// actual pruning if the interval [k+1, nxt_k-1] is not empty
 				if(k+1<nxt_k) {
-					if(num_pruning>0 &&pruning[num_pruning-1][1]==k) {
+					
+					// store the pruning AND concatenate pruned intervals when possible
+					if( num_pruning>0 && pruning[num_pruning-1][1]==k ) {
 						pruning[num_pruning-1][1] = nxt_k;
 					} else {
 						pruning[num_pruning][0] = k+1;
@@ -324,6 +307,7 @@ public class PropRanking extends Propagator<IntVar> {
 				System.out.println();
 			}
 			
+			// enforce pruning
 			for(int i=0; i<vars.length; i++) {
 				for(int j=0; j<num_pruning; j++) {
 					vars[i].removeInterval(pruning[j][0], pruning[j][1], aCause);
