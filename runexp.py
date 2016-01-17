@@ -18,12 +18,12 @@ parser = argparse.ArgumentParser(description='Compute a sequence of tests')
 parser.add_argument('--length',type=int,default=5,help='seq length')
 parser.add_argument('--rank',action='store_false',help='use ranking (default permutation)')
 parser.add_argument('--type',type=str,default="uncorrelation",help='type of relation',choices=["uncorrelation","correlation","anticorrelation"])
-
+parser.add_argument('--decomp',action='store_true',help='decompose ranking')
 
 args = parser.parse_args()
     
 
-cmdargs = [str(args.length), str(args.rank), args.type] #, args.show, str(args.time), str(args.node), str(args.seed)]
+cmdargs = [str(args.length), str(args.rank), args.type, str(args.decomp)] #, args.show, str(args.time), str(args.node), str(args.seed)]
     
 chococmd = ['java', '-cp', 'lib/choco-solver-3.3.1.jar:lib/trove-3.0.0.jar:lib/slf4j-1.7.13/slf4j-simple-1.7.13.jar:lib/slf4j-1.7.13/slf4j-api-1.7.13.jar:out:.', 'RankingExperiment']
 
