@@ -64,24 +64,24 @@ public class RankingExperiment {
                         solver.post(ICF.alldifferent(Y));
                 } else {
                     if( decomp ) {
-                        // IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
-                        // IntVar[] YS = VF.integerArray("YS", N, 1, N, solver);
-                        //
-                        // solver.post(ICF.sort(X, XS));
-                        // solver.post(ICF.sort(Y, YS));
-                        //
-                        // solver.post(ICF.arithm(XS[0], "=", 1));
-                        // solver.post(ICF.arithm(YS[0], "=", 1));
-                        //
-                        // for(int i = 0; i < N-1; ++i) {
-                        //     solver.post(LCF.or(ICF.arithm(XS[i+1], "=", XS[i]),
-                        //                        ICF.arithm(XS[i+1], "=", i+2)));
-                        //     solver.post(LCF.or(ICF.arithm(YS[i+1], "=", YS[i]),
-                        //                        ICF.arithm(YS[i+1], "=", i+2)));
-                        // }
-															
-												solver.post( Ranking.reformulate( X, solver ) );
-												solver.post( Ranking.reformulate( Y, solver ) );
+                        IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
+                        IntVar[] YS = VF.integerArray("YS", N, 1, N, solver);
+
+                        solver.post(ICF.sort(X, XS));
+                        solver.post(ICF.sort(Y, YS));
+
+                        solver.post(ICF.arithm(XS[0], "=", 1));
+                        solver.post(ICF.arithm(YS[0], "=", 1));
+
+                        for(int i = 0; i < N-1; ++i) {
+                            solver.post(LCF.or(ICF.arithm(XS[i+1], "=", XS[i]),
+                                               ICF.arithm(XS[i+1], "=", i+2)));
+                            solver.post(LCF.or(ICF.arithm(YS[i+1], "=", YS[i]),
+                                               ICF.arithm(YS[i+1], "=", i+2)));
+                        }
+												//
+												// solver.post( Ranking.reformulate( X, solver ) );
+												// solver.post( Ranking.reformulate( Y, solver ) );
 												
                     } else {
                         solver.post(new Ranking(X));
