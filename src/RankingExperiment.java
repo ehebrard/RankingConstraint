@@ -64,21 +64,87 @@ public class RankingExperiment {
                         solver.post(ICF.alldifferent(Y));
                 } else {
                     if( decomp ) {
-                        IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
-                        IntVar[] YS = VF.integerArray("YS", N, 1, N, solver);
+                        // IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
+                        // IntVar[] YS = VF.integerArray("YS", N, 1, N, solver);
+                        //
+                        // solver.post(ICF.sort(X, XS));
+                        // solver.post(ICF.sort(Y, YS));
+                        //
+                        // solver.post(ICF.arithm(XS[0], "=", 1));
+                        // solver.post(ICF.arithm(YS[0], "=", 1));
+                        //
+                        // for(int i = 0; i < N-1; ++i) {
+                        //     solver.post(LCF.or(ICF.arithm(XS[i+1], "=", XS[i]),
+                        //                        ICF.arithm(XS[i+1], "=", i+2)));
+                        //     solver.post(LCF.or(ICF.arithm(YS[i+1], "=", YS[i]),
+                        //                        ICF.arithm(YS[i+1], "=", i+2)));
+                        // }
+												
+												
+												
+												int[] values = new int[N];
+												for(int i=0; i<N; i++) values[i] = (i+1);
+												
+												IntVar[] XO = VF.integerArray("XOcc", N, 0, N, solver);
+												IntVar[] XCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
+												
+												solver.post( ICF.global_cardinality( X, values, XO, true ) );
+												
+												solver.post( ICF.arithm( XO[0], "=", XCO[0] ) );
+												for(int i=1; i<N; ++i) {
+													IntVar[] scope = new IntVar[2];
+													scope[0] = XO[i];
+													scope[1] = XCO[i-1];
+													
+													solver.post( ICF.sum(scope, XCO[i]) );
+												}
+												
+												
+												for(int i=0; i<N-1; ++i) {
+													// Occ(1) + ... + Occ(i) >= i
+													solver.post( ICF.arithm( XCO[i], ">", i ) );
 
-                        solver.post(ICF.sort(X, XS));
-                        solver.post(ICF.sort(Y, YS));
+													// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
+												                          solver.post(
+														LCF.or(ICF.arithm(XCO[i] , "=", (i+1)),
+												                           				 ICF.arithm(XO[i+1], "=", 0)));
 
-                        solver.post(ICF.arithm(XS[0], "=", 1));
-                        solver.post(ICF.arithm(YS[0], "=", 1));
+												                          solver.post(
+														LCF.or(ICF.arithm(XCO[i] , ">", (i+1)),
+												                           				 ICF.arithm(XO[i+1], ">", 0)));
+												}
 
-                        for(int i = 0; i < N-1; ++i) {
-                            solver.post(LCF.or(ICF.arithm(XS[i+1], "=", XS[i]),
-                                               ICF.arithm(XS[i+1], "=", i+2)));
-                            solver.post(LCF.or(ICF.arithm(YS[i+1], "=", YS[i]),
-                                               ICF.arithm(YS[i+1], "=", i+2)));
-                        }
+												
+												IntVar[] YO = VF.integerArray("YOcc", N, 0, N, solver);
+												IntVar[] YCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
+												
+												solver.post( ICF.global_cardinality( Y, values, YO, true ) );
+												
+												solver.post( ICF.arithm( YO[0], "=", YCO[0] ) );
+												for(int i=1; i<N; ++i) {
+													IntVar[] scope = new IntVar[2];
+													scope[0] = YO[i];
+													scope[1] = YCO[i-1];
+													
+													solver.post( ICF.sum(scope, YCO[i]) );
+												}
+												
+												
+												for(int i=0; i<N-1; ++i) {
+													// Occ(1) + ... + Occ(i) >= i
+													solver.post( ICF.arithm( YCO[i], ">", i ) );
+
+													// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
+												                          solver.post(
+														LCF.or(ICF.arithm(YCO[i] , "=", (i+1)),
+												                           				 ICF.arithm(YO[i+1], "=", 0)));
+
+												                          solver.post(
+														LCF.or(ICF.arithm(YCO[i] , ">", (i+1)),
+												                           				 ICF.arithm(YO[i+1], ">", 0)));
+												}
+												
+												
 												//
 												// solver.post( Ranking.reformulate( X, solver ) );
 												// solver.post( Ranking.reformulate( Y, solver ) );
