@@ -73,10 +73,18 @@ public class Ranking extends Constraint {
 		}
 	}
 
-    public static Constraint[] reformulate(IntVar[] vars) {
+    public static Constraint[] reformulate(IntVar[] vars, Solver solver) {
         List<Constraint> cstrs = new ArrayList<>();
 				
-				// TODO
+				int N = vars.length;
+				
+        IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
+        cstrs.add( ICF.sort(vars, XS) );
+        cstrs.add( ICF.arithm(XS[0], "=", 1) );
+        for(int i = 0; i < N-1; ++i) {
+            cstrs.add( LCF.or(ICF.arithm(XS[i+1], "=", XS[i]) ,
+ 														  ICF.arithm(XS[i+1], "=", i+2)) );
+        }
 				
         return cstrs.toArray(new Constraint[cstrs.size()]);
     }

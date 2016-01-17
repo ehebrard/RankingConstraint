@@ -54,7 +54,7 @@ import util.Tuple;
 public class PropRanking extends Propagator<IntVar> {
 	
 	private static boolean verbose = false;
-	private static boolean trace = true;
+	private static boolean trace = false;
 
 	protected boolean enforceRC;
 	

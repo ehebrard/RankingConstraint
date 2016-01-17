@@ -2,6 +2,7 @@
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VF;
 import org.chocosolver.solver.Solver;
+import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.ICF;
 import org.chocosolver.solver.constraints.LCF;
 import org.chocosolver.solver.search.strategy.ISF;
@@ -63,25 +64,29 @@ public class RankingExperiment {
                         solver.post(ICF.alldifferent(Y));
                 } else {
                     if( decomp ) {
-                        IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
-                        IntVar[] YS = VF.integerArray("YS", N, 1, N, solver);
-
-                        solver.post(ICF.sort(X, XS));
-                        solver.post(ICF.sort(Y, YS));
-
-                        solver.post(ICF.arithm(XS[0], "=", 1));
-                        solver.post(ICF.arithm(YS[0], "=", 1));
-
-                        for(int i = 0; i < N-1; ++i) {
-                            solver.post(LCF.or(ICF.arithm(XS[i+1], "=", XS[i]),
-                                               ICF.arithm(XS[i+1], "=", i+2)));
-                            solver.post(LCF.or(ICF.arithm(YS[i+1], "=", YS[i]),
-                                               ICF.arithm(YS[i+1], "=", i+2)));
-                        }
+                        // IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
+                        // IntVar[] YS = VF.integerArray("YS", N, 1, N, solver);
+                        //
+                        // solver.post(ICF.sort(X, XS));
+                        // solver.post(ICF.sort(Y, YS));
+                        //
+                        // solver.post(ICF.arithm(XS[0], "=", 1));
+                        // solver.post(ICF.arithm(YS[0], "=", 1));
+                        //
+                        // for(int i = 0; i < N-1; ++i) {
+                        //     solver.post(LCF.or(ICF.arithm(XS[i+1], "=", XS[i]),
+                        //                        ICF.arithm(XS[i+1], "=", i+2)));
+                        //     solver.post(LCF.or(ICF.arithm(YS[i+1], "=", YS[i]),
+                        //                        ICF.arithm(YS[i+1], "=", i+2)));
+                        // }
+															
+												solver.post( Ranking.reformulate( X, solver ) );
+												solver.post( Ranking.reformulate( Y, solver ) );
+												
                     } else {
                         solver.post(new Ranking(X));
                         solver.post(new Ranking(Y));
-                }
+                		}
                 }
 
                 // distance
@@ -94,12 +99,10 @@ public class RankingExperiment {
                 int maxD = N*N;
 
                 if(!perm) {
-                        //maxD = (3*N/2-1)*N/2;
-                        if((N%2)>0)
+                        if((N%2)==0)
                                 maxD = (3*N/2-1)*N/2;
                         else {
-                                System.out.println("TODO");
-                                System.exit(1);
+																maxD = 2*(N/2)*(N/2) + (N/2+1)*(N/2) + N/2;
                         }
                 } else {
                         if((maxD%2)>0) maxD++;
@@ -108,11 +111,6 @@ public class RankingExperiment {
 
                 IntVar Distance = VF.bounded("TotalDistance", 0, maxD, solver);
                 solver.post(ICF.sum(D, Distance));
-
-                System.out.println(Distance.toString());
-
-                //System.exit(1);
-
 
                 IntVar Objective = null;
 
