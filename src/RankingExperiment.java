@@ -198,7 +198,7 @@ public class RankingExperiment {
 
                 IntVar Distance = VF.bounded("TotalDistance", 0, maxD, solver);
                 solver.post(ICF.sum(D, Distance));
-								solver.post( ICF.arithm( Distance, "=", maxD ) );
+								//solver.post( ICF.arithm( Distance, "=", maxD ) );
 
                 IntVar Objective = null;
 
@@ -218,46 +218,46 @@ public class RankingExperiment {
                 }
 
                 //Chatterbox.showSolutions(solver);
-                Chatterbox.showDecisions(solver);
+                //Chatterbox.showDecisions(solver);
 
                 //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
 
                 solver.set(new StrategiesSequencer(ISF.lexico_LB(X), ISF.lexico_LB(Y)));
 
 
-                //solver.findOptimalSolution((type<0 ? ResolutionPolicy.MAXIMIZE : ResolutionPolicy.MINIMIZE), Objective);
+                solver.findOptimalSolution((type<0 ? ResolutionPolicy.MAXIMIZE : ResolutionPolicy.MINIMIZE), Objective);
 								
-								int solcount = 0;
-								if(solver.findSolution()){
-								   do{
-										 
-										 System.out.println(solcount);
-                     System.out.print("X:");
-                     for(int i=0; i<N; i++) {
-                             System.out.print(" "+X[i].getValue());
-                     }
-                     System.out.println();
-                     System.out.print("Y:");
-                     for(int i=0; i<N; i++) {
-                             System.out.print(" "+Y[i].getValue());
-                     }
-                     System.out.println();
-                     System.out.print("D:");
-                     for(int i=0; i<N; i++) {
-                             System.out.print(" "+D[i].getValue());
-                     }
-                     System.out.println();
-                     System.out.print("Objective: = ");
-                     System.out.println(Objective.getValue() + "\n");
-										 
-										 ++solcount;
-										 
-										 if(solcount>54) System.exit(1);
-								       // do something, e.g. print out variables' value
-								   } while(solver.nextSolution());
-								}
-								System.out.println(solcount);
-								System.exit(1);
+								// int solcount = 0;
+								// if(solver.findSolution()){
+								//    do{
+								//
+								// 		 System.out.println(solcount);
+								//                      System.out.print("X:");
+								//                      for(int i=0; i<N; i++) {
+								//                              System.out.print(" "+X[i].getValue());
+								//                      }
+								//                      System.out.println();
+								//                      System.out.print("Y:");
+								//                      for(int i=0; i<N; i++) {
+								//                              System.out.print(" "+Y[i].getValue());
+								//                      }
+								//                      System.out.println();
+								//                      System.out.print("D:");
+								//                      for(int i=0; i<N; i++) {
+								//                              System.out.print(" "+D[i].getValue());
+								//                      }
+								//                      System.out.println();
+								//                      System.out.print("Objective: = ");
+								//                      System.out.println(Objective.getValue() + "\n");
+								//
+								// 		 ++solcount;
+								//
+								// 		 //if(solcount>54) System.exit(1);
+								//        // do something, e.g. print out variables' value
+								//    } while(solver.nextSolution());
+								// }
+								// System.out.println(solcount);
+								// System.exit(1);
 
 
                 if(solver.getMeasures().getSolutionCount()>0) {

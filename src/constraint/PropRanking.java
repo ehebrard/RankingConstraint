@@ -53,8 +53,8 @@ import util.Tuple;
 */
 public class PropRanking extends Propagator<IntVar> {
 	
-	private static boolean verbose = true;
-	private static boolean trace = true;
+	private static boolean verbose = false;
+	private static boolean trace = false;
 
 	protected boolean enforceRC;
 	
@@ -242,6 +242,7 @@ public class PropRanking extends Propagator<IntVar> {
 			System.out.println("greedy:");
 		}
 		
+		int the_max = 0;
 		while(k <= vars.length) {
 			if(verbose) {
 				System.out.println("assign " + k + " to:");
@@ -280,8 +281,10 @@ public class PropRanking extends Propagator<IntVar> {
 
 			}
 			
+			if(Xi.first > the_max)
+				the_max = Xi.first;
 			
-			if(Xi.first == k) { // rule and possible pruning
+			if(the_max == k) { // rule and possible pruning
 					
 				if(verbose) {
 					System.out.println("learn a rule <" + (k+1) + "," + nxt_k + ">");
