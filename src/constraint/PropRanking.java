@@ -53,8 +53,8 @@ import util.Tuple;
 */
 public class PropRanking extends Propagator<IntVar> {
 	
-	private static boolean verbose = false;
-	private static boolean trace = false;
+	private static boolean verbose = true;
+	private static boolean trace = true;
 
 	protected boolean enforceRC;
 	
@@ -158,13 +158,15 @@ public class PropRanking extends Propagator<IntVar> {
 			int lb = increasingLowerBoundVars[j].getLB()-1;
 			if(lb > j) this.contradiction(null, "impossible");
 			if(lb == j) {
-				while(last++ < j) {
+				while(last < j) {
 					
 					if(verbose) {
 						System.out.println("upper bound pruning: " + increasingUpperBoundVars[last].toString() + " <= " + j);
 					}
 					
-					increasingLowerBoundVars[last].updateUpperBound(j+1, aCause);
+					increasingLowerBoundVars[last].updateUpperBound(j, aCause);
+					
+					last++;
 				}
 			}
 		}

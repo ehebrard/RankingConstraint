@@ -218,7 +218,7 @@ public class RankingExperiment {
                 }
 
                 //Chatterbox.showSolutions(solver);
-                //Chatterbox.showDecisions(solver);
+                Chatterbox.showDecisions(solver);
 
                 //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
 
@@ -231,6 +231,7 @@ public class RankingExperiment {
 								if(solver.findSolution()){
 								   do{
 										 
+										 System.out.println(solcount);
                      System.out.print("X:");
                      for(int i=0; i<N; i++) {
                              System.out.print(" "+X[i].getValue());
@@ -250,6 +251,8 @@ public class RankingExperiment {
                      System.out.println(Objective.getValue() + "\n");
 										 
 										 ++solcount;
+										 
+										 if(solcount>54) System.exit(1);
 								       // do something, e.g. print out variables' value
 								   } while(solver.nextSolution());
 								}
