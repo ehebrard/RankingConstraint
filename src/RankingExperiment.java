@@ -82,72 +82,93 @@ public class RankingExperiment {
 												
 												
 												
-												int[] values = new int[N];
-												for(int i=0; i<N; i++) values[i] = (i+1);
-												
-												IntVar[] XO = VF.integerArray("XOcc", N, 0, N, solver);
-												IntVar[] XCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
-												
-												solver.post( ICF.global_cardinality( X, values, XO, true ) );
-												
-												solver.post( ICF.arithm( XO[0], "=", XCO[0] ) );
-												for(int i=1; i<N; ++i) {
-													IntVar[] scope = new IntVar[2];
-													scope[0] = XO[i];
-													scope[1] = XCO[i-1];
-													
-													solver.post( ICF.sum(scope, XCO[i]) );
-												}
-												
-												
-												for(int i=0; i<N-1; ++i) {
-													// Occ(1) + ... + Occ(i) >= i
-													solver.post( ICF.arithm( XCO[i], ">", i ) );
-
-													// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
-												                          solver.post(
-														LCF.or(ICF.arithm(XCO[i] , "=", (i+1)),
-												                           				 ICF.arithm(XO[i+1], "=", 0)));
-
-												                          solver.post(
-														LCF.or(ICF.arithm(XCO[i] , ">", (i+1)),
-												                           				 ICF.arithm(XO[i+1], ">", 0)));
-												}
-
-												
-												IntVar[] YO = VF.integerArray("YOcc", N, 0, N, solver);
-												IntVar[] YCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
-												
-												solver.post( ICF.global_cardinality( Y, values, YO, true ) );
-												
-												solver.post( ICF.arithm( YO[0], "=", YCO[0] ) );
-												for(int i=1; i<N; ++i) {
-													IntVar[] scope = new IntVar[2];
-													scope[0] = YO[i];
-													scope[1] = YCO[i-1];
-													
-													solver.post( ICF.sum(scope, YCO[i]) );
-												}
-												
-												
-												for(int i=0; i<N-1; ++i) {
-													// Occ(1) + ... + Occ(i) >= i
-													solver.post( ICF.arithm( YCO[i], ">", i ) );
-
-													// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
-												                          solver.post(
-														LCF.or(ICF.arithm(YCO[i] , "=", (i+1)),
-												                           				 ICF.arithm(YO[i+1], "=", 0)));
-
-												                          solver.post(
-														LCF.or(ICF.arithm(YCO[i] , ">", (i+1)),
-												                           				 ICF.arithm(YO[i+1], ">", 0)));
-												}
-												
-												
+												// int[] values = new int[N];
+												// for(int i=0; i<N; i++) values[i] = (i+1);
 												//
-												// solver.post( Ranking.reformulate( X, solver ) );
-												// solver.post( Ranking.reformulate( Y, solver ) );
+												// IntVar[] XO = VF.integerArray("XOcc", N, 0, N, solver);
+												// IntVar[] XCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
+												//
+												// solver.post( ICF.global_cardinality( X, values, XO, true ) );
+												//
+												// solver.post( ICF.arithm( XO[0], "=", XCO[0] ) );
+												// for(int i=1; i<N; ++i) {
+												// 	IntVar[] scope = new IntVar[2];
+												// 	scope[0] = XO[i];
+												// 	scope[1] = XCO[i-1];
+												//
+												// 	solver.post( ICF.sum(scope, XCO[i]) );
+												// }
+												//
+												//
+												// for(int i=0; i<N-1; ++i) {
+												// 	// Occ(1) + ... + Occ(i) >= i
+												// 	solver.post( ICF.arithm( XCO[i], ">", i ) );
+												//
+												// 	// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
+												//                           solver.post(
+												// 		LCF.or(ICF.arithm(XCO[i] , "=", (i+1)),
+												//                            				 ICF.arithm(XO[i+1], "=", 0)));
+												//
+												//                           solver.post(
+												// 		LCF.or(ICF.arithm(XCO[i] , ">", (i+1)),
+												//                            				 ICF.arithm(XO[i+1], ">", 0)));
+												// }
+												//
+												//
+												// IntVar[] YO = VF.integerArray("YOcc", N, 0, N, solver);
+												// IntVar[] YCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
+												//
+												// solver.post( ICF.global_cardinality( Y, values, YO, true ) );
+												//
+												// solver.post( ICF.arithm( YO[0], "=", YCO[0] ) );
+												// for(int i=1; i<N; ++i) {
+												// 	IntVar[] scope = new IntVar[2];
+												// 	scope[0] = YO[i];
+												// 	scope[1] = YCO[i-1];
+												//
+												// 	solver.post( ICF.sum(scope, YCO[i]) );
+												// }
+												//
+												//
+												// for(int i=0; i<N-1; ++i) {
+												// 	// Occ(1) + ... + Occ(i) >= i
+												// 	solver.post( ICF.arithm( YCO[i], ">", i ) );
+												//
+												// 	// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
+												//                           solver.post(
+												// 		LCF.or(ICF.arithm(YCO[i] , "=", (i+1)),
+												//                            				 ICF.arithm(YO[i+1], "=", 0)));
+												//
+												//                           solver.post(
+												// 		LCF.or(ICF.arithm(YCO[i] , ">", (i+1)),
+												//                            				 ICF.arithm(YO[i+1], ">", 0)));
+												// }
+												
+												
+												// IS IT WHAT WAS NOT WORKING FOR GEORGE ?
+												 // solver.post( Ranking.reformulateSort( X, solver ) );
+												 // solver.post( Ranking.reformulateSort( Y, solver ) );
+												 //
+												 // solver.post( Ranking.reformulateGcc( X, solver ) );
+												 // solver.post( Ranking.reformulateGcc( Y, solver ) );
+												
+												 // Constraint[] decomposition = Ranking.reformulateSort( X, solver );
+												 // for(int i=0; i<decomposition.length; i++) {
+												 // 													 solver.post(decomposition[i]);
+												 // }
+												 // decomposition = Ranking.reformulateSort( Y, solver );
+												 //  												 for(int i=0; i<decomposition.length; i++) {
+												 //  													 solver.post(decomposition[i]);
+												 //  												 }
+												 
+												 Constraint[] decomposition = Ranking.reformulateGcc( X, solver );
+												 for(int i=0; i<decomposition.length; i++) {
+													 solver.post(decomposition[i]);
+												 }
+												 decomposition = Ranking.reformulateGcc( Y, solver );
+ 												 for(int i=0; i<decomposition.length; i++) {
+ 													 solver.post(decomposition[i]);
+ 												 }
 												
                     } else {
                         solver.post(new Ranking(X));
@@ -177,6 +198,7 @@ public class RankingExperiment {
 
                 IntVar Distance = VF.bounded("TotalDistance", 0, maxD, solver);
                 solver.post(ICF.sum(D, Distance));
+								solver.post( ICF.arithm( Distance, "=", maxD ) );
 
                 IntVar Objective = null;
 
@@ -195,7 +217,7 @@ public class RankingExperiment {
 
                 }
 
-                Chatterbox.showSolutions(solver);
+                //Chatterbox.showSolutions(solver);
                 //Chatterbox.showDecisions(solver);
 
                 //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
@@ -203,7 +225,36 @@ public class RankingExperiment {
                 solver.set(new StrategiesSequencer(ISF.lexico_LB(X), ISF.lexico_LB(Y)));
 
 
-                solver.findOptimalSolution((type<0 ? ResolutionPolicy.MAXIMIZE : ResolutionPolicy.MINIMIZE), Objective);
+                //solver.findOptimalSolution((type<0 ? ResolutionPolicy.MAXIMIZE : ResolutionPolicy.MINIMIZE), Objective);
+								
+								int solcount = 0;
+								if(solver.findSolution()){
+								   do{
+										 
+                     System.out.print("X:");
+                     for(int i=0; i<N; i++) {
+                             System.out.print(" "+X[i].getValue());
+                     }
+                     System.out.println();
+                     System.out.print("Y:");
+                     for(int i=0; i<N; i++) {
+                             System.out.print(" "+Y[i].getValue());
+                     }
+                     System.out.println();
+                     System.out.print("D:");
+                     for(int i=0; i<N; i++) {
+                             System.out.print(" "+D[i].getValue());
+                     }
+                     System.out.println();
+                     System.out.print("Objective: = ");
+                     System.out.println(Objective.getValue() + "\n");
+										 
+										 ++solcount;
+								       // do something, e.g. print out variables' value
+								   } while(solver.nextSolution());
+								}
+								System.out.println(solcount);
+								System.exit(1);
 
 
                 if(solver.getMeasures().getSolutionCount()>0) {

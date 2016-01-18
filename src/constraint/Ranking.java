@@ -73,7 +73,7 @@ public class Ranking extends Constraint {
 		}
 	}
 
-    public static Constraint[] reformulate(IntVar[] vars, Solver solver) {
+    public static Constraint[] reformulateSort(IntVar[] vars, Solver solver) {
         List<Constraint> cstrs = new ArrayList<>();
 				
 				int N = vars.length;
@@ -85,6 +85,46 @@ public class Ranking extends Constraint {
             cstrs.add( LCF.or(ICF.arithm(XS[i+1], "=", XS[i]) ,
  														  ICF.arithm(XS[i+1], "=", i+2)) );
         }
+				
+        return cstrs.toArray(new Constraint[cstrs.size()]);
+    }
+		
+    public static Constraint[] reformulateGcc(IntVar[] vars, Solver solver) {
+        List<Constraint> cstrs = new ArrayList<>();
+				
+				int N = vars.length;
+				
+				int[] values = new int[N];
+				for(int i=0; i<N; i++) values[i] = (i+1);
+				
+				IntVar[] XO = VF.integerArray("XOcc", N, 0, N, solver);
+				IntVar[] XCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
+				
+				cstrs.add( ICF.global_cardinality( vars, values, XO, true ) );
+				
+				cstrs.add( ICF.arithm( XO[0], "=", XCO[0] ) );
+				for(int i=1; i<N; ++i) {
+					IntVar[] scope = new IntVar[2];
+					scope[0] = XO[i];
+					scope[1] = XCO[i-1];
+					
+					cstrs.add( ICF.sum(scope, XCO[i]) );
+				}
+				
+				
+				for(int i=0; i<N-1; ++i) {
+					// Occ(1) + ... + Occ(i) >= i
+					cstrs.add( ICF.arithm( XCO[i], ">", i ) );
+
+					// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
+				  cstrs.add(
+						LCF.or(ICF.arithm(XCO[i] , "=", (i+1)),
+				           ICF.arithm(XO[i+1], "=", 0)));
+
+				  cstrs.add(
+						LCF.or(ICF.arithm(XCO[i] , ">", (i+1)),
+				           ICF.arithm(XO[i+1], ">", 0)));
+				}
 				
         return cstrs.toArray(new Constraint[cstrs.size()]);
     }
