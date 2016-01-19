@@ -55,6 +55,8 @@ public class PropRanking extends Propagator<IntVar> {
 	
 	private static boolean verbose = false;
 	private static boolean trace = false;
+	private int ncalls = 0;
+
 
 	protected boolean enforceRC;
 	
@@ -174,6 +176,9 @@ public class PropRanking extends Propagator<IntVar> {
 	
 	private void lowerBoundPruning() throws ContradictionException {
 		
+		//if(ncalls == 45287 && vars[3].getLB() == 3 && vars[3].getUB() == 4 ) System.exit(1);
+		
+		
 		if(verbose) {
 			System.out.println("LB pruning");
 		}
@@ -251,8 +256,12 @@ public class PropRanking extends Propagator<IntVar> {
 			nxt_k = k+1;
 			
 			// add variables whose domain contains k in the binary heap
-			while( ilb_ptr < vars.length && increasingLowerBoundVars[ilb_ptr].getLB()<=k ) {	
+			while( ilb_ptr < vars.length && increasingLowerBoundVars[ilb_ptr].getLB()<=k && increasingLowerBoundVars[ilb_ptr].getUB()>=k ) {	
 				Tuple< Integer, IntVar > t = new Tuple< Integer, IntVar >( increasingLowerBoundVars[ilb_ptr].getUB(), increasingLowerBoundVars[ilb_ptr] );
+				
+				//System.out.print(" (+" + increasingLowerBoundVars[ilb_ptr].toString() + ")");
+				
+				
 				sortedVars.add(t);
 				ilb_ptr++;
 			}
@@ -264,6 +273,9 @@ public class PropRanking extends Propagator<IntVar> {
 			
 			Tuple< Integer, IntVar > Xi = sortedVars.remove();
 
+			//System.out.print(" (-" + Xi.second.toString() + ")");
+
+
 			if(verbose) {
 				System.out.println("  " + Xi.second.toString());
 			}
@@ -271,6 +283,8 @@ public class PropRanking extends Propagator<IntVar> {
 			// compute the set M of variables which we won't be able to assign to a new "k" value 
 			while( !sortedVars.isEmpty()	&& sortedVars.peek().first < nxt_k ) {
 				Tuple< Integer, IntVar > Xj = sortedVars.remove();
+				
+				//System.out.println(" (-" + Xi.second.toString() + ")");
 
 				if(Xj.first < k) this.contradiction(null, "impossible");
 				nxt_k++;
@@ -335,8 +349,12 @@ public class PropRanking extends Propagator<IntVar> {
 	@Override
 	public void propagate(int evtmask) throws ContradictionException {
 		
+		//if(ncalls==176) System.exit(1);
+		
+		ncalls++;
+		
 		if(verbose) {
-			System.out.println("propagate Ranking");
+			System.out.println("propagate Ranking " + ncalls);
 		}
 		
 		upperBoundPruning();

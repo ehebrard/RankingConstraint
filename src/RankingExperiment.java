@@ -1,6 +1,7 @@
 
-import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.VF;
+import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.solver.variables.Task;
 import org.chocosolver.solver.Solver;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.ICF;
@@ -18,6 +19,7 @@ import constraint.PropRanking;
 
 import util.Tuple;
 import util.BinaryHeap;
+import util.MyDecisionMessage;
 
 /**
 *
@@ -49,12 +51,134 @@ public class RankingExperiment {
                 else if(args[2].equals("correlation")) type = 1;
                 boolean decomp = (args[3].equals("True"));
 
-                re.footRule(length, perm, type, decomp);
+								re.footRule(length, perm, type, decomp);
+
+
+								// /// SCHEDULING STUFF
+								//
+								// int[][] dur = new int[2][5];
+								// int[][] dem = new int[2][5];
+								//
+								// dur[0][0] = 2;
+								// dur[0][1] = 3;
+								// dur[0][2] = 1;
+								// dur[0][3] = 4;
+								// dur[0][4] = 2;
+								//
+								// dur[1][0] = 4;
+								// dur[1][1] = 1;
+								// dur[1][2] = 3;
+								// dur[1][3] = 2;
+								// dur[1][4] = 3;
+								//
+								// dem[0][0] = 2;
+								// dem[0][1] = 1;
+								// dem[0][2] = 2;
+								// dem[0][3] = 3;
+								// dem[0][4] = 1;
+								//
+								// dem[1][0] = 3;
+								// dem[1][1] = 3;
+								// dem[1][2] = 2;
+								// dem[1][3] = 1;
+								// dem[1][4] = 2;
+								//
+								//
+								//
+								// re.watScheduling(dur.length, dur[0].length, dur, dem, 4, decomp);
+
         }
+				
+				
+				public void watScheduling(int num_type, int num_task, int[][] duration, int[][] demand, int capacity, boolean decomp) {
+					Solver solver = new Solver("Scheduling");
+					
+					int horizon = 0;
+					for(int t=0; t<num_type; t++) {
+						for(int i=0; i<num_task; ++i) {
+							horizon += duration[t][i];
+						}
+					}
+					
+					
+					IntVar[][] starts = VF.boundedMatrix("s", num_type, num_task, 0, horizon, solver);
+					IntVar[][] durs   = VF.boundedMatrix("p", num_type, num_task, 0, horizon, solver);
+					IntVar[][] ends   = VF.boundedMatrix("e", num_type, num_task, 0, horizon, solver);
+					
+					IntVar[] demands = new IntVar[num_type*num_task];
+					
+					Task[] tasks = new Task[num_type*num_task];
+					for(int t=0; t<num_type; t++) {
+						for(int i=0; i<num_task; ++i) {
+							tasks[t*num_task+i] = new Task(starts[t][i], durs[t][i], ends[t][i]);
+							demands[t*num_task+i] = VF.fixed("d_"+t+","+i, demand[t][i], solver);
+						}
+					}
+					
+					IntVar[][] position = VF.integerMatrix("R", num_type, num_task, 1, num_task, solver);
+					
+					IntVar cap = VF.fixed("capacity", capacity, solver);
+					
+					IntVar makespan = VF.bounded("Makespan", 0, horizon, solver);
+					
+					
+					//channelling position <-> time
+					for(int t=0; t<num_type; t++) {
+						for(int i=0; i<num_task; i++) {
+							for(int j=i+1; j<num_task; j++) {
+								solver.post( LCF.or( ICF.arithm(ends[t][i], ">", starts[t][j] ), ICF.arithm(position[t][i], "<", position[t][j]) ) );
+								solver.post( LCF.or( ICF.arithm(starts[t][i], "<", ends[t][j] ), ICF.arithm(position[t][i], ">", position[t][j]) ) );
+							}
+						}
+					}
+					
+					// channelling duration <-> position
+					for(int t=0; t<num_type; t++) {
+						for(int i=0; i<num_task; i++) {
+							// IntVar dur_const = VF.fixed("d", duration[t][i], solver);
+							solver.post( ICF.times( position[t][i], duration[t][i], durs[t][i]) );
+						}
+					}
+					
+					// implied rankings
+					for(int t=0; t<num_type; t++) {
+						if(decomp) {
+							solver.post( Ranking.reformulateGcc( position[t], solver ) );
+						} else {
+							solver.post( new Ranking( position[t] ) );
+						}
+					}
+					
+					// cumulative
+					solver.post( ICF.cumulative(tasks, demands, cap) );
+					
+					// objective
+					for(int t=0; t<num_type; t++) {
+						for(int i=0; i<num_task; i++) {
+							solver.post( ICF.arithm( ends[t][i], "<=", makespan ) );
+						}
+					}
+					
+					System.out.println( solver.toString() );
+					
+					
+          Chatterbox.showSolutions(solver);
+          //Chatterbox.showDecisions(solver);
+					
+					//Chatterbox.showDecisions(solver, new MyDecisionMessage(solver, Y));
+
+          //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
+
+          solver.set(new StrategiesSequencer(ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(starts[1]), ISF.lexico_LB(ends[1])));
+
+
+          solver.findOptimalSolution(ResolutionPolicy.MINIMIZE, makespan);
+					
+				}
 
 
         public void footRule(int N, boolean perm, int type, boolean decomp) {
-                Solver solver = new Solver("Hello world!");
+                Solver solver = new Solver("Correlation");
 
                 IntVar[] X = VF.integerArray("X", N, 1, N, solver);
                 IntVar[] Y = VF.integerArray("Y", N, 1, N, solver);
@@ -217,8 +341,10 @@ public class RankingExperiment {
 
                 }
 
-                //Chatterbox.showSolutions(solver);
+                Chatterbox.showSolutions(solver);
                 //Chatterbox.showDecisions(solver);
+								
+								//Chatterbox.showDecisions(solver, new MyDecisionMessage(solver, Y));
 
                 //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
 
@@ -257,6 +383,7 @@ public class RankingExperiment {
 								//    } while(solver.nextSolution());
 								// }
 								// System.out.println(solcount);
+								
 								// System.exit(1);
 
 
@@ -287,6 +414,8 @@ public class RankingExperiment {
                                 System.out.println("NO SOLUTION FOUND");
                         }
                 }
+								
+								
                 System.out.println(solver.getMeasures().toOneShortLineString() + "\n");
 
 
