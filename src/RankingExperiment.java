@@ -11,7 +11,8 @@ import org.chocosolver.solver.search.strategy.strategy.StrategiesSequencer;
 import org.chocosolver.solver.search.measure.IMeasures;
 import org.chocosolver.solver.trace.Chatterbox;
 import org.chocosolver.solver.ResolutionPolicy;
-
+import org.chocosolver.solver.search.loop.monitors.SMF;
+import org.chocosolver.solver.search.limits.FailCounter;
 
 
 import constraint.Ranking;
@@ -50,53 +51,79 @@ public class RankingExperiment {
                 if(args[2].equals("anticorrelation")) type = -1;
                 else if(args[2].equals("correlation")) type = 1;
                 boolean decomp = (args[3].equals("True"));
+								boolean schedule = (args[4].equals("True"));
+								int time_cutoff = Integer.parseInt(args[5]);
+								boolean restarts = (args[6].equals("True"));
+								int seed = Integer.parseInt(args[7]);
 
-								re.footRule(length, perm, type, decomp);
+								if(!schedule) {
+									re.footRule(length, perm, type, decomp, time_cutoff);
+								} else {
+
+									/// SCHEDULING STUFF
+
+									int[][] dur = new int[2][10];
+									int[][] dem = new int[2][10];
+
+									dur[0][0] = 2;
+									dur[0][1] = 3;
+									dur[0][2] = 1;
+									dur[0][3] = 4;
+									dur[0][4] = 2;
+									dur[0][5] = 3;
+									dur[0][6] = 3;
+									dur[0][7] = 1;
+									dur[0][8] = 2;
+									dur[0][9] = 2;
+
+									dur[1][0] = 4;
+									dur[1][1] = 1;
+									dur[1][2] = 3;
+									dur[1][3] = 2;
+									dur[1][4] = 3;
+									dur[1][5] = 4;
+									dur[1][6] = 4;
+									dur[1][7] = 3;
+									dur[1][8] = 2;
+									dur[1][9] = 2;
+
+									dem[0][0] = 2;
+									dem[0][1] = 1;
+									dem[0][2] = 2;
+									dem[0][3] = 3;
+									dem[0][4] = 1;
+									dem[0][5] = 2;
+									dem[0][6] = 1;
+									dem[0][7] = 1;
+									dem[0][8] = 3;
+									dem[0][9] = 3;
+
+									dem[1][0] = 3;
+									dem[1][1] = 3;
+									dem[1][2] = 2;
+									dem[1][3] = 1;
+									dem[1][4] = 2;
+									dem[1][5] = 2;
+									dem[1][6] = 3;
+									dem[1][7] = 2;
+									dem[1][8] = 2;
+									dem[1][9] = 1;
 
 
-								// /// SCHEDULING STUFF
-								//
-								// int[][] dur = new int[2][5];
-								// int[][] dem = new int[2][5];
-								//
-								// dur[0][0] = 2;
-								// dur[0][1] = 3;
-								// dur[0][2] = 1;
-								// dur[0][3] = 4;
-								// dur[0][4] = 2;
-								//
-								// dur[1][0] = 4;
-								// dur[1][1] = 1;
-								// dur[1][2] = 3;
-								// dur[1][3] = 2;
-								// dur[1][4] = 3;
-								//
-								// dem[0][0] = 2;
-								// dem[0][1] = 1;
-								// dem[0][2] = 2;
-								// dem[0][3] = 3;
-								// dem[0][4] = 1;
-								//
-								// dem[1][0] = 3;
-								// dem[1][1] = 3;
-								// dem[1][2] = 2;
-								// dem[1][3] = 1;
-								// dem[1][4] = 2;
-								//
-								//
-								//
-								// re.watScheduling(dur.length, dur[0].length, dur, dem, 4, decomp);
+
+									re.watScheduling(dur.length-1, dur[0].length, dur, dem, 4, decomp, time_cutoff, restarts, seed);
+								}
 
         }
 				
 				
-				public void watScheduling(int num_type, int num_task, int[][] duration, int[][] demand, int capacity, boolean decomp) {
+				public void watScheduling(int num_type, int num_task, int[][] duration, int[][] demand, int capacity, boolean decomp, int time_cutoff, boolean restarts, int seed) {
 					Solver solver = new Solver("Scheduling");
 					
 					int horizon = 0;
 					for(int t=0; t<num_type; t++) {
 						for(int i=0; i<num_task; ++i) {
-							horizon += duration[t][i];
+							horizon += (num_task+1) * duration[t][i] / 2;
 						}
 					}
 					
@@ -121,6 +148,15 @@ public class RankingExperiment {
 					
 					IntVar makespan = VF.bounded("Makespan", 0, horizon, solver);
 					
+					IntVar[] allvars = new IntVar[2*num_type*num_task];
+					int k=0;
+					for(int t=0; t<num_type; t++) {
+						for(int i=0; i<num_task; i++) {
+							allvars[k++] = position[t][i];
+							allvars[k++] = starts[t][i];
+						}
+					}
+					
 					
 					//channelling position <-> time
 					for(int t=0; t<num_type; t++) {
@@ -140,14 +176,16 @@ public class RankingExperiment {
 						}
 					}
 					
-					// implied rankings
+					// ranking
 					for(int t=0; t<num_type; t++) {
 						if(decomp) {
 							solver.post( Ranking.reformulateGcc( position[t], solver ) );
+							//solver.post( Ranking.reformulateSort( position[t], solver ) );
 						} else {
 							solver.post( new Ranking( position[t] ) );
 						}
 					}
+
 					
 					// cumulative
 					solver.post( ICF.cumulative(tasks, demands, cap) );
@@ -159,7 +197,7 @@ public class RankingExperiment {
 						}
 					}
 					
-					System.out.println( solver.toString() );
+					//System.out.println( solver.toString() );
 					
 					
           Chatterbox.showSolutions(solver);
@@ -169,15 +207,55 @@ public class RankingExperiment {
 
           //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
 
-          solver.set(new StrategiesSequencer(ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(starts[1]), ISF.lexico_LB(ends[1])));
+          //solver.set(new StrategiesSequencer(ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(starts[1]), ISF.lexico_LB(ends[1]), ISF.lexico_LB(makespan)));
+					
+					//solver.set(new StrategiesSequencer(ISF.lexico_LB(position[0]), ISF.lexico_LB(position[1]), ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(starts[1]), ISF.lexico_LB(ends[1]), ISF.lexico_LB(makespan)));
+					
+					//solver.set(new StrategiesSequencer(ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(starts[1]), ISF.lexico_LB(ends[1]), ISF.lexico_LB(makespan)));
+					
+					//solver.set(new StrategiesSequencer(ISF.lexico_LB(position[0]), ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(makespan)));
+					
+					//solver.set(new StrategiesSequencer(ISF.lexico_LB(position[0]), ISF.lexico_LB(position[1]), ISF.lexico_LB(starts[0]), ISF.lexico_LB(starts[1])));
 
+
+					solver.set( ISF.sequencer(ISF.activity(allvars, seed), ISF.lexico_LB(makespan)) );
+					
+					if(restarts) {
+						SMF.luby(solver, 2, 2, new FailCounter(2), 25000);
+					}
+					
+					if(time_cutoff > 0) {
+						SMF.limitTime(solver, time_cutoff);
+					}
 
           solver.findOptimalSolution(ResolutionPolicy.MINIMIZE, makespan);
+					
+					
+					if(solver.getMeasures().getSolutionCount()>0) {						
+						int fmakespan = makespan.getValue();
+						for(int t=0; t<num_type; t++) {
+							for(int i=0; i<num_task; i++) {
+								for(int q=0; q<demand[t][i]; q++) {
+									for(int j=0; j<starts[t][i].getValue(); j++) {
+										System.out.print(" ");
+									}
+									for(int j=starts[t][i].getValue(); j<ends[t][i].getValue(); j++) {
+										System.out.print(duration[t][i]);
+									}
+									System.out.println();
+								}
+							}
+							System.out.println();
+						}
+					} else {
+						System.out.println("NO SOLUTION FOUND");
+					}
+					System.out.println(solver.getMeasures().toOneShortLineString() + "\n");
 					
 				}
 
 
-        public void footRule(int N, boolean perm, int type, boolean decomp) {
+        public void footRule(int N, boolean perm, int type, boolean decomp, int time_cutoff) {
                 Solver solver = new Solver("Correlation");
 
                 IntVar[] X = VF.integerArray("X", N, 1, N, solver);
@@ -188,103 +266,6 @@ public class RankingExperiment {
                         solver.post(ICF.alldifferent(Y));
                 } else {
                     if( decomp ) {
-                        // IntVar[] XS = VF.integerArray("XS", N, 1, N, solver);
-                        // IntVar[] YS = VF.integerArray("YS", N, 1, N, solver);
-                        //
-                        // solver.post(ICF.sort(X, XS));
-                        // solver.post(ICF.sort(Y, YS));
-                        //
-                        // solver.post(ICF.arithm(XS[0], "=", 1));
-                        // solver.post(ICF.arithm(YS[0], "=", 1));
-                        //
-                        // for(int i = 0; i < N-1; ++i) {
-                        //     solver.post(LCF.or(ICF.arithm(XS[i+1], "=", XS[i]),
-                        //                        ICF.arithm(XS[i+1], "=", i+2)));
-                        //     solver.post(LCF.or(ICF.arithm(YS[i+1], "=", YS[i]),
-                        //                        ICF.arithm(YS[i+1], "=", i+2)));
-                        // }
-												
-												
-												
-												// int[] values = new int[N];
-												// for(int i=0; i<N; i++) values[i] = (i+1);
-												//
-												// IntVar[] XO = VF.integerArray("XOcc", N, 0, N, solver);
-												// IntVar[] XCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
-												//
-												// solver.post( ICF.global_cardinality( X, values, XO, true ) );
-												//
-												// solver.post( ICF.arithm( XO[0], "=", XCO[0] ) );
-												// for(int i=1; i<N; ++i) {
-												// 	IntVar[] scope = new IntVar[2];
-												// 	scope[0] = XO[i];
-												// 	scope[1] = XCO[i-1];
-												//
-												// 	solver.post( ICF.sum(scope, XCO[i]) );
-												// }
-												//
-												//
-												// for(int i=0; i<N-1; ++i) {
-												// 	// Occ(1) + ... + Occ(i) >= i
-												// 	solver.post( ICF.arithm( XCO[i], ">", i ) );
-												//
-												// 	// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
-												//                           solver.post(
-												// 		LCF.or(ICF.arithm(XCO[i] , "=", (i+1)),
-												//                            				 ICF.arithm(XO[i+1], "=", 0)));
-												//
-												//                           solver.post(
-												// 		LCF.or(ICF.arithm(XCO[i] , ">", (i+1)),
-												//                            				 ICF.arithm(XO[i+1], ">", 0)));
-												// }
-												//
-												//
-												// IntVar[] YO = VF.integerArray("YOcc", N, 0, N, solver);
-												// IntVar[] YCO = VF.integerArray("XCumulOcc", N, 1, N, solver);
-												//
-												// solver.post( ICF.global_cardinality( Y, values, YO, true ) );
-												//
-												// solver.post( ICF.arithm( YO[0], "=", YCO[0] ) );
-												// for(int i=1; i<N; ++i) {
-												// 	IntVar[] scope = new IntVar[2];
-												// 	scope[0] = YO[i];
-												// 	scope[1] = YCO[i-1];
-												//
-												// 	solver.post( ICF.sum(scope, YCO[i]) );
-												// }
-												//
-												//
-												// for(int i=0; i<N-1; ++i) {
-												// 	// Occ(1) + ... + Occ(i) >= i
-												// 	solver.post( ICF.arithm( YCO[i], ">", i ) );
-												//
-												// 	// if Occ(1) + ... + Occ(i) > i+1 iff Occ(i+1) = 0
-												//                           solver.post(
-												// 		LCF.or(ICF.arithm(YCO[i] , "=", (i+1)),
-												//                            				 ICF.arithm(YO[i+1], "=", 0)));
-												//
-												//                           solver.post(
-												// 		LCF.or(ICF.arithm(YCO[i] , ">", (i+1)),
-												//                            				 ICF.arithm(YO[i+1], ">", 0)));
-												// }
-												
-												
-												// IS IT WHAT WAS NOT WORKING FOR GEORGE ?
-												 // solver.post( Ranking.reformulateSort( X, solver ) );
-												 // solver.post( Ranking.reformulateSort( Y, solver ) );
-												 //
-												 // solver.post( Ranking.reformulateGcc( X, solver ) );
-												 // solver.post( Ranking.reformulateGcc( Y, solver ) );
-												
-												 // Constraint[] decomposition = Ranking.reformulateSort( X, solver );
-												 // for(int i=0; i<decomposition.length; i++) {
-												 // 													 solver.post(decomposition[i]);
-												 // }
-												 // decomposition = Ranking.reformulateSort( Y, solver );
-												 //  												 for(int i=0; i<decomposition.length; i++) {
-												 //  													 solver.post(decomposition[i]);
-												 //  												 }
-												 
 												 Constraint[] decomposition = Ranking.reformulateGcc( X, solver );
 												 for(int i=0; i<decomposition.length; i++) {
 													 solver.post(decomposition[i]);
@@ -348,8 +329,11 @@ public class RankingExperiment {
 
                 //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
 
-                solver.set(new StrategiesSequencer(ISF.lexico_LB(X), ISF.lexico_LB(Y)));
+                solver.set( ISF.sequencer(ISF.lexico_LB(X), ISF.lexico_LB(Y)));
 
+								if(time_cutoff > 0) {
+									SMF.limitTime(solver, time_cutoff);
+								}
 
                 solver.findOptimalSolution((type<0 ? ResolutionPolicy.MAXIMIZE : ResolutionPolicy.MINIMIZE), Objective);
 								

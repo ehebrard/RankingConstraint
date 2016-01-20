@@ -178,6 +178,17 @@ public class PropRanking extends Propagator<IntVar> {
 		
 		//if(ncalls == 45287 && vars[3].getLB() == 3 && vars[3].getUB() == 4 ) System.exit(1);
 		
+		if( num_rule == 0 ) {
+			
+			return;
+			
+			// System.out.println("\nl");
+			// 	for(int j=0; j<vars.length; j++) {
+			// 		System.out.print( " " + increasingLowerBoundVars[j].toString() );
+			// 	}
+			// 	System.out.println();
+		}
+		
 		
 		if(verbose) {
 			System.out.println("LB pruning");
@@ -197,7 +208,7 @@ public class PropRanking extends Propagator<IntVar> {
 			// check if the variable with j-th highest lower bound is a culprit w.r.t. some rules
 			int maxXj = increasingLowerBoundVars[j].getUB();
 			int minXj = increasingLowerBoundVars[j].getLB();
-						
+
 			// decrease the pointer to the first rule 
 			while( rule[u][1] >= maxXj && l>0 && rule[l][0] > minXj ) {
 				l--;
