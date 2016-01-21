@@ -13,10 +13,12 @@ import org.chocosolver.solver.trace.Chatterbox;
 import org.chocosolver.solver.ResolutionPolicy;
 import org.chocosolver.solver.search.loop.monitors.SMF;
 import org.chocosolver.solver.search.limits.FailCounter;
+import org.chocosolver.solver.exception.ContradictionException;
 
 
 import constraint.Ranking;
 import constraint.PropRanking;
+import constraint.algo.AlgoRankingBC;
 
 import util.Tuple;
 import util.BinaryHeap;
@@ -42,8 +44,16 @@ public class RankingExperiment {
                 */
         public static void main(String[] args){
                 //System.out.println();
-
+								
+								
                 RankingExperiment re = new RankingExperiment();
+
+
+								re.test();
+								
+								System.exit(1);
+
+
 
                 int length = Integer.parseInt(args[0]);
                 boolean perm = (args[1].equals("True"));
@@ -251,6 +261,101 @@ public class RankingExperiment {
 						System.out.println("NO SOLUTION FOUND");
 					}
 					System.out.println(solver.getMeasures().toOneShortLineString() + "\n");
+					
+				}
+
+				public void test() {
+					Solver solver = new Solver("test");
+					
+					// IntVar[] X = new IntVar[7];
+					// X[0] = VF.integer("x1", 1, 7, solver);
+					// X[1] = VF.integer("x2", 1, 7, solver);
+					// X[2] = VF.integer("x3", 2, 4, solver);
+					// X[3] = VF.integer("x4", 2, 3, solver);
+					// X[4] = VF.integer("x5", 3, 4, solver);
+					// X[5] = VF.integer("x6", 1, 7, solver);
+					// X[6] = VF.integer("x7", 3, 4, solver);
+					
+					IntVar[] X = new IntVar[6];
+					X[0] = VF.integer("x1", 3, 4, solver);
+					X[1] = VF.integer("x2", 2, 4, solver);
+					X[2] = VF.integer("x3", 3, 4, solver);
+					X[3] = VF.integer("x4", 2, 5, solver);
+					X[4] = VF.integer("x5", 3, 6, solver);
+					X[5] = VF.integer("x6", 1, 6, solver);
+					
+					// IntVar[] X = new IntVar[9];
+					// X[0] = VF.integer("x1", 1, 2, solver);
+					// X[1] = VF.integer("x2", 1, 2, solver);
+					// X[2] = VF.integer("x3", 1, 3, solver);
+					// X[3] = VF.integer("x4", 2, 3, solver);
+					// X[4] = VF.integer("x5", 1, 4, solver);
+					// X[5] = VF.integer("x6", 3, 6, solver);
+					// X[6] = VF.integer("x7", 2, 7, solver);
+					// X[7] = VF.integer("x8", 4, 7, solver);
+					// X[8] = VF.integer("x9", 4, 7, solver);
+
+					
+					PropRanking propagator = new PropRanking( X, true );
+					
+					
+					// for(int i=0; i<X.length; i++) {
+					// 	System.out.println( X[i] );
+					// }
+					//
+					// System.out.println("\nub pruning");
+					//
+					// try {
+					// 	propagator.upperBoundPruning();
+					// } catch(ContradictionException e) {
+					// 	System.out.println("wipe out!");
+					// }
+					//
+					// for(int i=0; i<X.length; i++) {
+					// 	System.out.println( X[i] );
+					// }
+					//
+					// System.out.println("\ndistentailment");
+					// try {
+					// 	propagator.disentailmentAndPruning();
+					// } catch(ContradictionException e) {
+					// 	System.out.println("wipe out!");
+					// }
+					//
+					// for(int i=0; i<X.length; i++) {
+					// 	System.out.println( X[i] );
+					// }
+					//
+					// System.out.println("\nlb pruning");
+					// try {
+					// 	propagator.lowerBoundPruning();
+					// } catch(ContradictionException e) {
+					// 	System.out.println("wipe out!");
+					// }
+					//
+					// for(int i=0; i<X.length; i++) {
+					// 	System.out.println( X[i] );
+					// }
+					//
+					
+					
+					AlgoRankingBC cg_algo = new AlgoRankingBC(null);
+					
+					cg_algo.reset(X);
+					
+					
+					cg_algo.sortIt();
+					
+					//cg_algo.print_structure();
+					
+					try {
+						cg_algo.filterLower();
+					} catch(ContradictionException e) {
+						System.out.println("wipe out!");
+					}
+					
+					
+					
 					
 				}
 

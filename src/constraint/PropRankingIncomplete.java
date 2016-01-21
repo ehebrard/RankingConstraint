@@ -51,7 +51,7 @@ import util.Tuple;
 *
 * @author Emmanuel Hebrard, George Katsirelos
 */
-public class PropRanking extends Propagator<IntVar> {
+public class PropRankingIncomplete extends Propagator<IntVar> {
 	
 	private static boolean verbose = false;
 	private static boolean trace = false;
@@ -117,7 +117,7 @@ public class PropRanking extends Propagator<IntVar> {
 	
 	
 	
-	public PropRanking(IntVar[] vars, boolean rc) {
+	public PropRankingIncomplete(IntVar[] vars, boolean rc) {
 		super(vars, PropagatorPriority.LINEAR, false);
 		enforceRC = rc;
 		
@@ -139,7 +139,7 @@ public class PropRanking extends Propagator<IntVar> {
 	}
 	
 	
-	public void upperBoundPruning() throws ContradictionException {
+	private void upperBoundPruning() throws ContradictionException {
 		
 		if(verbose) {
 			System.out.println("UB pruning");
@@ -174,7 +174,7 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 	}
 	
-	public void lowerBoundPruning() throws ContradictionException {
+	private void lowerBoundPruning() throws ContradictionException {
 		
 		//if(ncalls == 45287 && vars[3].getLB() == 3 && vars[3].getUB() == 4 ) System.exit(1);
 		
@@ -240,7 +240,7 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 	}
 	
-	public void disentailmentAndPruning() throws ContradictionException {
+	private void disentailmentAndPruning() throws ContradictionException {
 		
 		if(verbose) {
 			System.out.println("Disentailment");
