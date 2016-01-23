@@ -13,6 +13,8 @@ import java.util.Comparator;
 
 public class AlgoRankingBC {
 
+	public static int verbose = 0;
+
 	int[] t; // Tree links
 	int[] d; // Diffs between critical capacities
 	int[] h; // Hall interval links
@@ -28,6 +30,11 @@ public class AlgoRankingBC {
 	private IntVar[] vars;
 
 	ArraySort sorter;
+	
+	
+	private int[][] rule; // list of a,b,k's 
+	private int num_rule;
+	
 
 	public AlgoRankingBC(Propagator cause) {
 		this.aCause = cause;
@@ -56,6 +63,12 @@ public class AlgoRankingBC {
 			minsorted[i] = interval;
 			maxsorted[i] = interval;
 		}
+		
+		num_rule = 0;
+		
+		
+		
+		rule = new int[n][3];
 	}
 
 	//****************************************************************************************************************//
@@ -78,12 +91,8 @@ public class AlgoRankingBC {
 	}
 
 	public void filter() throws ContradictionException {
-		boolean again;
-		do {
-			sortIt();
-			again = filterLower();
-			again |= filterUpper();
-		} while (again);
+		sortIt();
+		computeHall();
 	}
 
 	public void sortIt() {
@@ -102,19 +111,14 @@ public class AlgoRankingBC {
 		int nb = 0;
 		bounds[0] = last;
 		int i = 0, j = 0;
-		
-		print_structure();
-		
+
+		if(verbose>0) {
+			print_structure();
+		}
 		
 		while (true) {
-			
-			//System.out.print("\ni: "+i+", j: "+j+", min: "+min+", max: "+max+", last: "+last);
-			
 			if (i < this.vars.length && min <= max) {
 				if (min != last) {
-					
-					//System.out.print(" +bound (min) "+min);
-					
 					bounds[++nb] = last = min;
 				}
 				minsorted[i].minrank = nb;
@@ -123,9 +127,6 @@ public class AlgoRankingBC {
 				}
 			} else {
 				if (max != last) {
-					
-					//System.out.print(" +bound (max) "+max);
-					
 					bounds[++nb] = last = max;
 				}
 				maxsorted[j].maxrank = nb;
@@ -136,18 +137,14 @@ public class AlgoRankingBC {
 			}
 		}
 		
-		
-		
 		this.nbBounds = nb;
-		bounds[nb + 1] = bounds[nb] + 2;
+		bounds[nb + 1] = bounds[nb] * 2;
 
-
-		
-		System.out.println("\n"+nbBounds);
-		for (i = 0; i <= nbBounds; i++) {
-			System.out.print(" "+bounds[i]);
-		}
-		System.out.println();
+		// System.out.println("\n"+nbBounds);
+		// for (i = 0; i <= nbBounds; i++) {
+		// 	System.out.print(" "+bounds[i]);
+		// }
+		// System.out.println();
 
 	}
 
@@ -175,28 +172,35 @@ public class AlgoRankingBC {
 		return i;
 	}
 
-	public boolean filterLower() throws ContradictionException {
+	public void computeHall() throws ContradictionException {
+		num_rule = 0;
 		boolean filter = false;
 		for (int i = 1; i <= nbBounds + 1; i++) {
 			t[i] = h[i] = i - 1;
 			d[i] = bounds[i] - bounds[i - 1];
 		}
-		
-		// System.out.print("   ");
-		// for (int i = 1; i <= nbBounds+1; i++) {
-		// 	System.out.print(" "+t[i]);
-		// }
-		// System.out.println();
+
 		
 		for (int i = 0; i < this.vars.length; i++) {
 			
 			int _bi_ = nbBounds+1;
-			System.out.print( "\n" + bounds[_bi_] );
-			while( _bi_ > 1) {
-				System.out.print( " -(" + d[_bi_] + ")-> " + bounds[t[_bi_]] );
-				_bi_ = t[_bi_];
+			
+			if(verbose>1) {
+				System.out.print( "\n" + bounds[_bi_] );
+				while( _bi_ > 1) {
+					System.out.print( " -(" + d[_bi_] + ")-> " + bounds[t[_bi_]] );
+					_bi_ = t[_bi_];
+				}
+				System.out.println();
+				for(int _ti_ = nbBounds+1; _ti_ > 0; --_ti_) {
+					System.out.print( " " + bounds[_ti_] );
+				}
+				System.out.print("\n ");
+				for(int _ti_ = nbBounds+1; _ti_ > 0; --_ti_) {
+					System.out.print( " " + h[_ti_] );
+				}
+				System.out.println();
 			}
-			System.out.println();
 			
 			
 			int x = maxsorted[i].minrank;
@@ -204,78 +208,267 @@ public class AlgoRankingBC {
 			int z = pathmax(t, x + 1);
 			int j = t[z];
 			
-			System.out.println( "Explore [" + bounds[x] + ", " + (bounds[y]-1) + "]" );  
-			
+			if(verbose>1) {
+				System.out.println( "Explore [" + bounds[x] + ", " + (bounds[y]-1) + "] :" + z );  
+			}
 
 			if (--d[z] == 0) {
-				System.out.println( "remove " + bounds[z] + " (dominated)");  
+				if(verbose>1) {
+					System.out.println( "remove " + bounds[z] + " (dominated)");  
+				}
 				
 				t[z] = z + 1;
 				z = pathmax(t, t[z]);
 				t[z] = j;
+				
 			}
 			pathset(t, x + 1, z, z);
 	
-			if (d[z] <= bounds[z] - bounds[y]) {
-	
-				System.out.println(x + " " + h[x]);
-				if(h[x] > x)
-					System.out.println( "new Hall(1): [" + bounds[x] + ", " + (bounds[y]-1) + "]" );
-				else
-					System.out.println( "new Hall(2): [" + bounds[h[x]] + ", " + (bounds[y]-1) + "]" );
-				
-	
-				//aCause.contradiction(null, "");
-			}
 			if (h[x] > x) {
-				int w = pathmax(h, h[x]);
-				
+				int w = pathmax(h, h[x]);			
 				pathset(h, x, w, w);
 			}
-			if (d[z] == bounds[z] - bounds[y]) {
+			
+			if (d[z] <= bounds[z] - bounds[y]) {
 				
 				pathset(h, h[y], j - 1, y);
 				h[y] = j - 1;
+
+				if( y > h[y] ) {
+
+					int nrb = num_rule;
+					
+			
+					if(num_rule==0 || rule[num_rule-1][1] != bounds[y]) {
+						rule[num_rule][1] = bounds[y];
+						num_rule++;
+					}
+					rule[num_rule-1][0] = bounds[h[y]+1];
+					//rule[num_rule-1][2] = (bounds[z] - d[z] - bounds[h[y]+1]);
+					rule[num_rule-1][2] = (bounds[z] - d[z]);
+					
+					
+					if(verbose>1) {	
+						if(num_rule>nrb)				
+							System.out.println( "new Hall: [" + bounds[h[y]+1] + ", " + (bounds[y]-1) + "] #= " + (bounds[z] - d[z] - bounds[h[y]+1]) );
+						else
+							System.out.println( "improve Hall: [" + bounds[h[y]+1] + ", " + (bounds[y]-1) + "] #= " + (bounds[z] - d[z] - bounds[h[y]+1]) );
+					}
+					
+				}
+			}
+			
+		}
+		
+		
+		if(verbose>0) {
+			for(int i=0; i<num_rule; i++) {
+				System.out.println( "<" + rule[i][0] + ", " + rule[i][1] + ", " + rule[i][2] + ">");
 			}
 		}
-		return filter;
+		
+		for(int i=0; i<num_rule; i++) {
+			if(rule[i][1] < rule[i][2]) {
+				for(int j=0; j<vars.length; j++) {
+					vars[j].removeInterval(rule[i][1], rule[i][2]-1, aCause);
+				}
+			}
+		}
+		
 	}
 
-	public boolean filterUpper() throws ContradictionException {
-		boolean filter = false;
-		for (int i = 0; i <= nbBounds; i++) {
-			t[i] = h[i] = i + 1;
-			d[i] = bounds[i + 1] - bounds[i];
+
+	public void filterFromRules() throws ContradictionException {
+		// rules are of the form <a,b,c> and should be read as:
+		// if x is such that D(x) \not\subset [a, b[, then x \in [a,b[ => y \not\in [b,c], forall y
+		
+		// we use them as follows:
+		// if there exists y and R such that D(y) \subset \bicup_{i \in R} [b_i,c_i] then forall x such that D(x) \not\subset \bigcap_{i \in R} [a_i, b_i[ we have x \not\in \bigcap_{i \in R} [a,b[
+		
+		// rules are ordered so that b_{i+1} > b_i, and therefore c_{i+1} > c_i otherwise [FIND A GOOD REASON, but in any case i+1 would be useless]
+		// moreover, suppose that c_i >= b_{i+1}-1, then a_{i+1} <= a_i, because 1/ a_{i+1} <= b_i otherwise there would be a wipe out, and then, the interval [a_i, b_{i+1}] would dominates [a', b_{i+1}] for all a' \in [a_i, b_i]
+		for(int i=1; i<num_rule; i++) {
+			assert( rule[i][1] > rule[i-1][1] );
+			
+			assert( rule[i][2] > rule[i-1][2] );
+			
+			assert( rule[i-1][2] < rule[i][1] || rule[i-1][0] >= rule[i][0] );
 		}
-		for (int i = this.vars.length - 1; i >= 0; i--) {
-			int x = minsorted[i].maxrank;
-			int y = minsorted[i].minrank;
-			int z = pathmin(t, x - 1);
-			int j = t[z];
-			if (--d[z] == 0) {
-				t[z] = z - 1;
-				z = pathmin(t, t[z]);
-				t[z] = j;
+		
+		// since b_i's are in increasing order, there are at most n of them, and if we explore potential culprit ordered by non-decreasing lb, we do not have to look back to previous rules once we move to a new one
+		int l=0; // pointer to the first potential rule
+		int u=0; // pointer to the last rule for which 
+
+		int n=vars.length;
+		
+		for(int i=0; i<n; i++) {
+			
+			int lb = bounds[minsorted[i].minrank];
+			int ub = bounds[minsorted[i].maxrank]-1;
+			
+			
+			assert(lb == minsorted[i].var.getLB());
+			assert(ub == minsorted[i].var.getUB());
+			
+			
+			if(verbose>0) {
+				System.out.println("check if " + minsorted[i].var.toString() + " is culprit");
 			}
-			pathset(t, x - 1, z, z);
-			if (d[z] < bounds[y] - bounds[z]) {
-				aCause.contradiction(null, "");
-			}
-			if (h[x] < x) {
-				int w = pathmin(h, h[x]);
-				if (minsorted[i].var.updateUpperBound(bounds[w] - 1, aCause)) {
-					filter |= true;
-					minsorted[i].ub = minsorted[i].var.getUB();//bounds[w] - 1;
+			
+			if(verbose>1) {
+				if(l<num_rule-1) {
+					if(rule[l+1][1]<=lb) {
+						System.out.println("  rule [" + rule[l][1] + ", " + rule[l][2] + "] does not cover lb");
+					}
+				} else {
+					System.out.println("  last rule");
 				}
-				pathset(h, x, w, w);
 			}
-			if (d[z] == bounds[y] - bounds[z]) {
-				pathset(h, h[y], j + 1, y);
-				h[y] = j + 1;
+			
+			while(l<num_rule-1 && rule[l+1][1]<=lb) {
+				
+				l++; // find the tightest value for l
+				
+				if(verbose>1) {
+					if(l<num_rule-1) {
+						System.out.println("  move l-ptr from " + (l-1) + " = [" + rule[l-1][1] + ", " + rule[l-1][2] + "] to " + (l) + " = [" + rule[l][1] + ", " + rule[l][2] + "]");
+					} else {
+						System.out.println("  last rule");
+					}
+				}
+				
+			}
+			
+			if(verbose>1) {
+				if(rule[l][1]>lb) {
+					System.out.println("  could not cover lb");
+				}
+			}
+			
+			
+			if(rule[l][1]<=lb) {
+				
+				if(verbose>1) {
+					System.out.println(" lb covered, check ub ");
+					
+					if(u<n) {
+						if(rule[u][2]<ub) {
+							System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] too small");
+						} else {
+							System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] large enough");
+						}
+					
+						if(rule[u][2]>=rule[u+1][1]-1) {
+							System.out.println("   rules [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] are contiguous");
+						} else {
+							System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] have a GAP");
+						}
+					
+					} else {
+						System.out.println("   last rule");
+					}
+				}
+				
+				// the rule might apply, check ub
+				u = l;
+				while(u<n && rule[u][2]<ub && rule[u][2]>=rule[u+1][1]-1) {
+					u++;
+					
+					if(verbose>1) {
+						if(u<n) {
+							if(rule[u][2]<ub) {
+								System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] too small");
+							} else {
+								System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] large enough");
+							}
+					
+							if(rule[u][2]>=rule[u+1][1]-1) {
+								System.out.println("   rules [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] are contiguous");
+							} else {
+								System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] have a GAP");
+							}
+					
+						} else {
+							System.out.println("   last rule");
+						}
+					}
+				}
+
+				if(rule[u][2]>=ub) {
+				
+					if(verbose>1) {
+						System.out.print("  yes, for rules");
+					}
+				
+					// we can prune with respect to the rules r[l],...,r[u]
+					// - we prune the intersection of the [a_i, b_i], that is [r[l].a, r[l].b[ 
+					// - from variables that are not contained in the union, that is [r[u].a, r[u].b[ 
+				
+					for(int j=l; j<=u; j++) {
+					
+						if(verbose>1) {
+							System.out.print(" [" + rule[j][1] + ", " + rule[j][2] + "]");
+						}
+					
+						assert( rule[j][0]>=rule[j+1][0] );
+						assert( rule[j][1]<=rule[j+1][1] );
+					}
+				
+					if(verbose>1) {
+						System.out.println();
+					}
+				
+					for(int j=0; j<n; j++) {
+						int x_lb = vars[j].getLB();
+						int x_ub = vars[j].getUB();
+						
+						
+						boolean included = (x_lb >= rule[u][0] && x_ub < rule[u][1]);
+						
+						boolean disjoint = (rule[l][0] > x_ub || rule[l][1] <= x_lb);
+						
+						// System.out.print( "[" + x_lb + ", " + x_ub + "] is");
+						// if(!included)
+						// 	System.out.print(" not");
+						// System.out.println(" a subset of [" + rule[u][0] + ", " + (rule[u][1]-1) + "]");
+						//
+						// System.out.print( "[" + x_lb + ", " + x_ub + "] is");
+						// if(!disjoint)
+						// 	System.out.print(" not");
+						// System.out.println(" disjoint to [" + rule[l][0] + ", " + (rule[l][1]-1) + "]");
+						
+						
+						if( !included && !disjoint ) {
+						
+							if(verbose>0) {
+								System.out.println(" -> remove [" + rule[l][0] + ", " + (rule[l][1]-1) + "] from " + vars[j].toString());
+							}
+							
+						
+							if(rule[l][0]<=x_lb) {
+								
+								if(verbose>0) {
+									System.out.println(" => " + vars[j].toString() + " >= " + rule[l][1]);
+								}
+								
+								vars[j].updateLowerBound(rule[l][1], aCause);
+							} else if(rule[l][1]>x_ub) {
+								
+								if(verbose>0) {
+									System.out.println(" => " + vars[j].toString() + " <= " + (rule[l][0]-1));
+								}
+								
+								vars[j].updateUpperBound(rule[l][0]-1, aCause);
+							} else {									
+								vars[j].removeInterval(rule[l][0], rule[l][1]-1, aCause);
+							}
+						}
+					}
+				}				
 			}
 		}
-		return filter;
 	}
+
 	
 	public void print_structure() {
 		for(int i=0; i<vars.length; i++) {

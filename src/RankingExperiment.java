@@ -47,11 +47,11 @@ public class RankingExperiment {
 								
 								
                 RankingExperiment re = new RankingExperiment();
-
-
-								re.test();
-								
-								System.exit(1);
+								//
+								//
+								// re.test();
+								//
+								// System.exit(1);
 
 
 
@@ -276,24 +276,24 @@ public class RankingExperiment {
 					// X[5] = VF.integer("x6", 1, 7, solver);
 					// X[6] = VF.integer("x7", 3, 4, solver);
 					
-					IntVar[] X = new IntVar[6];
-					X[0] = VF.integer("x1", 3, 4, solver);
-					X[1] = VF.integer("x2", 2, 4, solver);
-					X[2] = VF.integer("x3", 3, 4, solver);
-					X[3] = VF.integer("x4", 2, 5, solver);
-					X[4] = VF.integer("x5", 3, 6, solver);
-					X[5] = VF.integer("x6", 1, 6, solver);
+					// IntVar[] X = new IntVar[6];
+					// X[0] = VF.integer("x1", 3, 4, solver);
+					// X[1] = VF.integer("x2", 2, 4, solver);
+					// X[2] = VF.integer("x3", 3, 4, solver);
+					// X[3] = VF.integer("x4", 2, 5, solver);
+					// X[4] = VF.integer("x5", 3, 6, solver);
+					// X[5] = VF.integer("x6", 1, 6, solver);
 					
-					// IntVar[] X = new IntVar[9];
-					// X[0] = VF.integer("x1", 1, 2, solver);
-					// X[1] = VF.integer("x2", 1, 2, solver);
-					// X[2] = VF.integer("x3", 1, 3, solver);
-					// X[3] = VF.integer("x4", 2, 3, solver);
-					// X[4] = VF.integer("x5", 1, 4, solver);
-					// X[5] = VF.integer("x6", 3, 6, solver);
-					// X[6] = VF.integer("x7", 2, 7, solver);
-					// X[7] = VF.integer("x8", 4, 7, solver);
-					// X[8] = VF.integer("x9", 4, 7, solver);
+					IntVar[] X = new IntVar[9];
+					X[0] = VF.integer("x1", 1, 2, solver);
+					X[1] = VF.integer("x2", 1, 2, solver);
+					X[2] = VF.integer("x3", 1, 3, solver);
+					X[3] = VF.integer("x4", 2, 3, solver);
+					X[4] = VF.integer("x5", 1, 4, solver);
+					X[5] = VF.integer("x6", 3, 6, solver);
+					X[6] = VF.integer("x7", 2, 7, solver);
+					X[7] = VF.integer("x8", 4, 7, solver);
+					X[8] = VF.integer("x9", 4, 7, solver);
 
 					
 					PropRanking propagator = new PropRanking( X, true );
@@ -349,10 +349,17 @@ public class RankingExperiment {
 					//cg_algo.print_structure();
 					
 					try {
-						cg_algo.filterLower();
+						cg_algo.computeHall();
 					} catch(ContradictionException e) {
 						System.out.println("wipe out!");
 					}
+					
+					try {
+						cg_algo.filterFromRules();
+					} catch(ContradictionException e) {
+						System.out.println("wipe out!");
+					}
+					
 					
 					
 					

@@ -46,6 +46,8 @@ import org.chocosolver.util.tools.ArrayUtils;
 import util.BinaryHeap;
 import util.Tuple;
 
+import constraint.algo.AlgoRankingBC;
+
 /**
 * Propagator for the Ranking Constraint (BC or RC) 
 *
@@ -59,20 +61,25 @@ public class PropRanking extends Propagator<IntVar> {
 
 
 	protected boolean enforceRC;
-	
+
+	protected int[] count;	
 	protected IntVar[] increasingUpperBoundVars;
 	protected IntVar[] increasingLowerBoundVars;
-	
-	protected int[] count;
-	
-	protected int[][] rule;
-	protected int num_rule;
-	
-	protected int[][] pruning;
-	protected int num_pruning;
-	
-	protected BinaryHeap< Tuple< Integer, IntVar > > sortedVars;
-	
+
+
+	AlgoRankingBC filter;
+
+
+
+
+	// protected int[][] rule;
+	// protected int num_rule;
+	//
+	// protected int[][] pruning;
+	// protected int num_pruning;
+	//
+	// protected BinaryHeap< Tuple< Integer, IntVar > > sortedVars;
+	//
 	
 	private void sortByIncreasingUpperBound() {
 
@@ -122,15 +129,15 @@ public class PropRanking extends Propagator<IntVar> {
 		enforceRC = rc;
 		
 		count = new int[vars.length];
-		rule = new int[vars.length][2];
-		pruning = new int[vars.length][2];
 		increasingUpperBoundVars = new IntVar[vars.length];
 		increasingLowerBoundVars = new IntVar[vars.length];
 		for(int i=0; i<vars.length; ++i) {
 			increasingUpperBoundVars[i] = vars[i];
 			increasingLowerBoundVars[i] = vars[i];
 		}
-		sortedVars = new BinaryHeap< Tuple< Integer, IntVar > >();
+		
+		filter = new AlgoRankingBC(aCause);
+		filter.reset(vars);
 	}
 	
 	@Override
@@ -174,194 +181,11 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 	}
 	
-	public void lowerBoundPruning() throws ContradictionException {
-		
-		//if(ncalls == 45287 && vars[3].getLB() == 3 && vars[3].getUB() == 4 ) System.exit(1);
-		
-		if( num_rule == 0 ) {
-			
-			return;
-			
-			// System.out.println("\nl");
-			// 	for(int j=0; j<vars.length; j++) {
-			// 		System.out.print( " " + increasingLowerBoundVars[j].toString() );
-			// 	}
-			// 	System.out.println();
-		}
-		
-		
-		if(verbose) {
-			System.out.println("LB pruning");
-		}
-		
-		sortByIncreasingLowerBound();
-		sortByIncreasingUpperBound();
-		
-		int n = vars.length;
-		
-		int last = n-1;
-		int l = num_rule-1;
-		int u = num_rule-1;
-		
-		for(int j=vars.length-1; j>=0; j--) {
-			
-			// check if the variable with j-th highest lower bound is a culprit w.r.t. some rules
-			int maxXj = increasingLowerBoundVars[j].getUB();
-			int minXj = increasingLowerBoundVars[j].getLB();
 
-			// decrease the pointer to the first rule 
-			while( rule[u][1] >= maxXj && l>0 && rule[l][0] > minXj ) {
-				l--;
-				if(rule[l][1] < rule[l+1][0]-1) u = l; // jump if there is a gap
-			}
-			
-			if(verbose) {
-				System.out.println("Check if " + increasingLowerBoundVars[j].toString() + " is culprit for rules [" + rule[l][0] + "," + rule[u][1] + "]");
-			}
-			
-			// Xj is a culprit for the rules from l to u
-			if( minXj>=rule[l][0] && maxXj<=rule[u][1] ) {
-			
-				// tightens u
-				while( u>0 && rule[u-1][1] >= maxXj ) u--;
-				
-				// enforce pruning
-				while( last >=  rule[u][1] ) {
-					
-					if(verbose) {
-						System.out.println("lower bound pruning: " + increasingUpperBoundVars[last].toString() + " >= " + rule[l][0]);
-					}
-					
-					increasingUpperBoundVars[last--].updateLowerBound(rule[l][0], aCause);
-				}
-				
-			}
-			
-		}
-	}
-	
-	public void disentailmentAndPruning() throws ContradictionException {
-		
-		if(verbose) {
-			System.out.println("Disentailment");
-		}
-		
-		int k = 1, nxt_k;
-		int ilb_ptr = 0;
-		
-		num_rule = 0;
-		num_pruning = 0;
-		sortByIncreasingLowerBound();
-		
-		
-		if(verbose) {
-			System.out.println("greedy:");
-		}
-		
-		int the_max = 0;
-		while(k <= vars.length) {
-			if(verbose) {
-				System.out.println("assign " + k + " to:");
-			}
-			
-			nxt_k = k+1;
-			
-			// add variables whose domain contains k in the binary heap
-			while( ilb_ptr < vars.length && increasingLowerBoundVars[ilb_ptr].getLB()<=k && increasingLowerBoundVars[ilb_ptr].getUB()>=k ) {	
-				Tuple< Integer, IntVar > t = new Tuple< Integer, IntVar >( increasingLowerBoundVars[ilb_ptr].getUB(), increasingLowerBoundVars[ilb_ptr] );
-				
-				//System.out.print(" (+" + increasingLowerBoundVars[ilb_ptr].toString() + ")");
-				
-				
-				sortedVars.add(t);
-				ilb_ptr++;
-			}
-				
-			
-			if(sortedVars.isEmpty()) {
-				this.contradiction(null, "impossible");
-			}
-			
-			Tuple< Integer, IntVar > Xi = sortedVars.remove();
-
-			//System.out.print(" (-" + Xi.second.toString() + ")");
-
-
-			if(verbose) {
-				System.out.println("  " + Xi.second.toString());
-			}
-			
-			// compute the set M of variables which we won't be able to assign to a new "k" value 
-			while( !sortedVars.isEmpty()	&& sortedVars.peek().first < nxt_k ) {
-				Tuple< Integer, IntVar > Xj = sortedVars.remove();
-				
-				//System.out.println(" (-" + Xi.second.toString() + ")");
-
-				if(Xj.first < k) this.contradiction(null, "impossible");
-				nxt_k++;
-				
-				if(verbose) {
-					System.out.println("  " + Xj.second.toString() + "(" + nxt_k + ")");
-				}
-
-			}
-			
-			if(Xi.first > the_max)
-				the_max = Xi.first;
-			
-			if(the_max == k) { // rule and possible pruning
-					
-				if(verbose) {
-					System.out.println("learn a rule <" + (k+1) + "," + nxt_k + ">");
-				}
-				
-				// the rule
-				rule[num_rule][0] = k+1;
-				rule[num_rule][1] = nxt_k;
-				
-				// actual pruning if the interval [k+1, nxt_k-1] is not empty
-				if(k+1<nxt_k) {
-					
-					// store the pruning AND concatenate pruned intervals when possible
-					if( num_pruning>0 && pruning[num_pruning-1][1]==k ) {
-						pruning[num_pruning-1][1] = nxt_k;
-					} else {
-						pruning[num_pruning][0] = k+1;
-						pruning[num_pruning][1] = nxt_k-1;
-						num_pruning++;
-					}
-				}
-				num_rule++;
-			}
-			
-			k = nxt_k;
-		}
-
-		if(num_pruning>0) {
-			
-			if(verbose) {
-				System.out.print("pruning:");
-				for(int j=0; j<num_pruning; j++) {
-					System.out.print(" [" + pruning[j][0] + "," + pruning[j][1] + "]");
-				}
-				System.out.println();
-			}
-			
-			// enforce pruning
-			for(int i=0; i<vars.length; i++) {
-				for(int j=0; j<num_pruning; j++) {
-					vars[i].removeInterval(pruning[j][0], pruning[j][1], aCause);
-				}
-			} 
-		}
-
-	}
 	
 	@Override
 	public void propagate(int evtmask) throws ContradictionException {
-		
-		//if(ncalls==176) System.exit(1);
-		
+	
 		ncalls++;
 		
 		if(verbose) {
@@ -369,8 +193,7 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 		
 		upperBoundPruning();
-		disentailmentAndPruning();
-		lowerBoundPruning();
+		filter.filter();
 		
 		if(trace) {
 			for(int j=0; j<vars.length; j++) {
