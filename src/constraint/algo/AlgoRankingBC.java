@@ -6,14 +6,23 @@ package constraint.algo;
 import org.chocosolver.solver.constraints.Propagator;
 import org.chocosolver.solver.exception.ContradictionException;
 import org.chocosolver.solver.variables.IntVar;
+import org.chocosolver.solver.variables.VF;
+import org.chocosolver.solver.constraints.Constraint;
+import org.chocosolver.solver.Solver;
 import org.chocosolver.util.sort.ArraySort;
+import org.chocosolver.solver.constraints.ICF;
+import org.chocosolver.solver.search.strategy.ISF;
 
 import java.io.Serializable;
 import java.util.Comparator;
 
+import constraint.Ranking;
+
 public class AlgoRankingBC {
 
 	public static int verbose = 0;
+	public static boolean check_consistency = false;
+	public static boolean verify_properties = false;
 
 	int[] t; // Tree links
 	int[] d; // Diffs between critical capacities
@@ -93,6 +102,10 @@ public class AlgoRankingBC {
 	public void filter() throws ContradictionException {
 		sortIt();
 		computeHall();
+		filterFromRules();
+		
+		if(check_consistency)
+			checkConsistency();
 	}
 
 	public void sortIt() {
@@ -287,12 +300,15 @@ public class AlgoRankingBC {
 		
 		// rules are ordered so that b_{i+1} > b_i, and therefore c_{i+1} > c_i otherwise [FIND A GOOD REASON, but in any case i+1 would be useless]
 		// moreover, suppose that c_i >= b_{i+1}-1, then a_{i+1} <= a_i, because 1/ a_{i+1} <= b_i otherwise there would be a wipe out, and then, the interval [a_i, b_{i+1}] would dominates [a', b_{i+1}] for all a' \in [a_i, b_i]
-		for(int i=1; i<num_rule; i++) {
-			assert( rule[i][1] > rule[i-1][1] );
+		
+		if(verify_properties) {
+			for(int i=1; i<num_rule; i++) {
+				if( rule[i][1] <= rule[i-1][1] ) { System.out.println("assert 1"); System.exit(1); };
 			
-			assert( rule[i][2] > rule[i-1][2] );
+				if( rule[i][2] <= rule[i-1][2] ) { System.out.println("assert 2"); System.exit(1); };
 			
-			assert( rule[i-1][2] < rule[i][1] || rule[i-1][0] >= rule[i][0] );
+				if( rule[i-1][2] >= rule[i][1] && rule[i-1][0] < rule[i][0] ) { System.out.println("assert 3"); System.exit(1); };
+			}
 		}
 		
 		// since b_i's are in increasing order, there are at most n of them, and if we explore potential culprit ordered by non-decreasing lb, we do not have to look back to previous rules once we move to a new one
@@ -303,12 +319,12 @@ public class AlgoRankingBC {
 		
 		for(int i=0; i<n; i++) {
 			
-			int lb = bounds[minsorted[i].minrank];
-			int ub = bounds[minsorted[i].maxrank]-1;
+			int lb = minsorted[i].var.getLB(); //bounds[minsorted[i].minrank];
+			int ub = minsorted[i].var.getUB(); //bounds[minsorted[i].maxrank]-1;
 			
 			
-			assert(lb == minsorted[i].var.getLB());
-			assert(ub == minsorted[i].var.getUB());
+			// assert(lb == minsorted[i].var.getLB());
+			// assert(ub == minsorted[i].var.getUB());
 			
 			
 			if(verbose>0) {
@@ -404,14 +420,16 @@ public class AlgoRankingBC {
 					// - we prune the intersection of the [a_i, b_i], that is [r[l].a, r[l].b[ 
 					// - from variables that are not contained in the union, that is [r[u].a, r[u].b[ 
 				
-					for(int j=l; j<=u; j++) {
+					if(verify_properties) {
+						for(int j=l; j<=u; j++) {
 					
-						if(verbose>1) {
-							System.out.print(" [" + rule[j][1] + ", " + rule[j][2] + "]");
+							if(verbose>1) {
+								System.out.print(" [" + rule[j][1] + ", " + rule[j][2] + "]");
+							}
+					
+							if( rule[j][0]<rule[j+1][0] ) { System.out.println("assert 4"); System.exit(1); };
+							if( rule[j][1]>rule[j+1][1] ) { System.out.println("assert 5"); System.exit(1); };
 						}
-					
-						assert( rule[j][0]>=rule[j+1][0] );
-						assert( rule[j][1]<=rule[j+1][1] );
 					}
 				
 					if(verbose>1) {
@@ -467,6 +485,58 @@ public class AlgoRankingBC {
 				}				
 			}
 		}
+	}
+	
+	
+	public void checkConsistency() {
+		
+		boolean[][] is_checked = new boolean[vars.length][vars.length+1];
+		int[] ub = new int[vars.length];
+		int[] lb = new int[vars.length];
+		
+    for (int i = 0; i < vars.length; i++) {
+			lb[i] = vars[i].getLB();
+			ub[i] = vars[i].getUB();
+    }
+		
+
+		for (int i = 0; i < vars.length; i++) {
+			for (int j = vars[i].getLB(); j <= vars[i].getUB(); j++) {
+				if(vars[i].contains(j) && !is_checked[i][j]) {
+					
+					Solver checker = new Solver("checker");
+		
+					IntVar[] X = new IntVar[vars.length];
+			    for (int k = 0; k < vars.length; k++) {
+						if(i==k) {
+							X[k] = VF.fixed("x"+k, j, checker);
+						} else {
+							X[k] = VF.bounded("x"+k, lb[k], ub[k], checker);
+			    	}
+					}
+		
+					checker.post( Ranking.reformulateGcc(X, checker) );
+					checker.set( ISF.lexico_LB(X) );
+		
+					if(!checker.findSolution()) {
+						System.out.println( "Missed pruning!" + X[i].toString() );
+					
+						for (int k = 0; k < vars.length; k++) {
+							System.out.println( vars[k].toString() );
+						}
+					
+						System.exit(1);
+					} else {
+						for(int k=0; k<vars.length; k++) {
+							is_checked[k][X[k].getValue()] = true;
+						}
+					}
+				}
+			}
+		}
+		
+		
+		
 	}
 
 	

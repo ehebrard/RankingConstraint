@@ -72,8 +72,8 @@ public class RankingExperiment {
 
 									/// SCHEDULING STUFF
 
-									int[][] dur = new int[2][10];
-									int[][] dem = new int[2][10];
+									int[][] dur = new int[2][15];
+									int[][] dem = new int[2][15];
 
 									dur[0][0] = 2;
 									dur[0][1] = 3;
@@ -84,7 +84,12 @@ public class RankingExperiment {
 									dur[0][6] = 3;
 									dur[0][7] = 1;
 									dur[0][8] = 2;
-									dur[0][9] = 2;
+									dur[0][9] = 1;
+									dur[0][10] = 3;
+									dur[0][11] = 2;
+									dur[0][12] = 2;
+									dur[0][13] = 3;
+									dur[0][14] = 2;
 
 									dur[1][0] = 4;
 									dur[1][1] = 1;
@@ -96,6 +101,11 @@ public class RankingExperiment {
 									dur[1][7] = 3;
 									dur[1][8] = 2;
 									dur[1][9] = 2;
+									dur[1][10] = 1;
+									dur[1][11] = 3;
+									dur[1][12] = 2;
+									dur[1][13] = 4;
+									dur[1][14] = 1;
 
 									dem[0][0] = 2;
 									dem[0][1] = 1;
@@ -107,6 +117,11 @@ public class RankingExperiment {
 									dem[0][7] = 1;
 									dem[0][8] = 3;
 									dem[0][9] = 3;
+									dem[0][10] = 2;
+									dem[0][11] = 3;
+									dem[0][12] = 3;
+									dem[0][13] = 1;
+									dem[0][14] = 1;
 
 									dem[1][0] = 3;
 									dem[1][1] = 3;
@@ -118,6 +133,11 @@ public class RankingExperiment {
 									dem[1][7] = 2;
 									dem[1][8] = 2;
 									dem[1][9] = 1;
+									dem[1][10] = 1;
+									dem[1][11] = 3;
+									dem[1][12] = 2;
+									dem[1][13] = 3;
+									dem[1][14] = 1;
 
 
 
@@ -225,8 +245,10 @@ public class RankingExperiment {
 					
 					//solver.set(new StrategiesSequencer(ISF.lexico_LB(position[0]), ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(makespan)));
 					
-					//solver.set(new StrategiesSequencer(ISF.lexico_LB(position[0]), ISF.lexico_LB(position[1]), ISF.lexico_LB(starts[0]), ISF.lexico_LB(starts[1])));
-
+					// if(position.length>1)
+					// 	solver.set(new StrategiesSequencer(ISF.lexico_LB(position[0]), ISF.lexico_LB(position[1]), ISF.lexico_LB(starts[0]), ISF.lexico_LB(starts[1])));
+					// else
+					// 	solver.set(new StrategiesSequencer(ISF.lexico_LB(starts[0]), ISF.lexico_LB(ends[0]), ISF.lexico_LB(makespan)));
 
 					solver.set( ISF.sequencer(ISF.activity(allvars, seed), ISF.lexico_LB(makespan)) );
 					
@@ -415,7 +437,7 @@ public class RankingExperiment {
 
                 IntVar Distance = VF.bounded("TotalDistance", 0, maxD, solver);
                 solver.post(ICF.sum(D, Distance));
-								//solver.post( ICF.arithm( Distance, "=", maxD ) );
+								solver.post( ICF.arithm( Distance, "=", maxD ) );
 
                 IntVar Objective = null;
 
@@ -434,7 +456,7 @@ public class RankingExperiment {
 
                 }
 
-                Chatterbox.showSolutions(solver);
+                //Chatterbox.showSolutions(solver);
                 //Chatterbox.showDecisions(solver);
 								
 								//Chatterbox.showDecisions(solver, new MyDecisionMessage(solver, Y));
@@ -453,24 +475,24 @@ public class RankingExperiment {
 								// if(solver.findSolution()){
 								//    do{
 								//
-								// 		 System.out.println(solcount);
-								//                      System.out.print("X:");
-								//                      for(int i=0; i<N; i++) {
-								//                              System.out.print(" "+X[i].getValue());
-								//                      }
-								//                      System.out.println();
-								//                      System.out.print("Y:");
-								//                      for(int i=0; i<N; i++) {
-								//                              System.out.print(" "+Y[i].getValue());
-								//                      }
-								//                      System.out.println();
-								//                      System.out.print("D:");
-								//                      for(int i=0; i<N; i++) {
-								//                              System.out.print(" "+D[i].getValue());
-								//                      }
-								//                      System.out.println();
-								//                      System.out.print("Objective: = ");
-								//                      System.out.println(Objective.getValue() + "\n");
+								// 		 // System.out.println(solcount);
+								// 		 // 								                     System.out.print("X:");
+								// 		 // 								                     for(int i=0; i<N; i++) {
+								// 		 // 								                             System.out.print(" "+X[i].getValue());
+								// 		 // 								                     }
+								// 		 // 								                     System.out.println();
+								// 		 // 								                     System.out.print("Y:");
+								// 		 // 								                     for(int i=0; i<N; i++) {
+								// 		 // 								                             System.out.print(" "+Y[i].getValue());
+								// 		 // 								                     }
+								// 		 // 								                     System.out.println();
+								// 		 // 								                     System.out.print("D:");
+								// 		 // 								                     for(int i=0; i<N; i++) {
+								// 		 // 								                             System.out.print(" "+D[i].getValue());
+								// 		 // 								                     }
+								// 		 // 								                     System.out.println();
+								// 		 // 								                     System.out.print("Objective: = ");
+								// 		 // 								                     System.out.println(Objective.getValue() + "\n");
 								//
 								// 		 ++solcount;
 								//
@@ -479,7 +501,8 @@ public class RankingExperiment {
 								//    } while(solver.nextSolution());
 								// }
 								// System.out.println(solcount);
-								
+								// System.out.println(solver.getMeasures().toOneShortLineString() + "\n");
+								//
 								// System.exit(1);
 
 
