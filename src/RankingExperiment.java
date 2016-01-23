@@ -437,7 +437,7 @@ public class RankingExperiment {
 
                 IntVar Distance = VF.bounded("TotalDistance", 0, maxD, solver);
                 solver.post(ICF.sum(D, Distance));
-								solver.post( ICF.arithm( Distance, "=", maxD ) );
+								//solver.post( ICF.arithm( Distance, "=", maxD ) );
 
                 IntVar Objective = null;
 
