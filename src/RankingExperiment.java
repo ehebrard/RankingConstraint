@@ -30,6 +30,17 @@ import util.MyDecisionMessage;
 */
 
 public class RankingExperiment {
+	
+	
+	public int objective;
+	public long num_node;
+	public long num_backtrack;
+	public long num_fail;
+	public long num_restart;
+	public long num_solution;
+	public boolean optimal;
+	public double runtime;
+	
 
         /**
                 * constructeur
@@ -65,12 +76,101 @@ public class RankingExperiment {
                 else if(args[3].equals("sort")) decomp = 2;
 								boolean schedule = (args[4].equals("True"));
 								int time_cutoff = Integer.parseInt(args[5]);
-								boolean restarts = (args[6].equals("True"));
+								boolean use_restarts = (args[6].equals("True"));
 								int seed = Integer.parseInt(args[7]);
-								int showopt = Integer.parseInt(args[8]);								
+								int showopt = Integer.parseInt(args[8]);
+								int num_exp = Integer.parseInt(args[9]);
 
 								if(!schedule) {
-									re.footRule(length, perm, type, decomp, time_cutoff, showopt);
+									
+									if(num_exp>1) {
+										int[] objectives = new int[num_exp];
+										long[] nodes = new long[num_exp];
+										long[] backtracks = new long[num_exp];
+										long[] fails = new long[num_exp];
+										long[] restarts = new long[num_exp];
+										long[] nsols = new long[num_exp];
+										boolean[] optimals = new boolean[num_exp];
+										double[] runtimes = new double[num_exp];
+									
+									
+										double avg_runtime = 0;
+										int num_launch = 0;
+										//for(int i=0; i<num_launch; i++) {
+										while(num_launch < num_exp) {
+											//System.out.println("run " + (i+1));
+											
+											int i=num_launch;
+											
+											re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, seed+i);
+											objectives[i] = re.objective;
+											nodes[i] = re.num_node;
+											backtracks[i] = re.num_backtrack;
+											fails[i] = re.num_fail;
+											restarts[i] = re.num_restart;
+											nsols[i] = re.num_solution;
+											nsols[i] = re.num_solution;
+											optimals[i] = re.optimal;
+											runtimes[i] = re.runtime;
+											
+											avg_runtime += runtimes[i];
+										
+											
+											num_launch++;
+											if(avg_runtime>time_cutoff) break;
+											
+										}
+										
+										
+										
+										int avg_obj = 0;
+										int avg_node = 0;
+										int avg_fail = 0;
+										int avg_backtrack = 0;
+										int avg_restart = 0;
+										int num_satisfiable = 0;
+										
+										double avg_optimal = 0;
+										
+										for(int i=0; i<num_launch; i++) {
+											avg_obj += objectives[i];
+											avg_node += nodes[i];
+											avg_fail += fails[i];
+											avg_backtrack += backtracks[i];
+											avg_restart += restarts[i];
+											
+											if(optimals[i])	
+												avg_optimal += 1.0;
+											if(nsols[i]>0)
+												num_satisfiable++;
+										}
+										
+										avg_obj /= num_launch;
+										avg_node /= num_launch;
+										avg_fail /= num_launch;
+										avg_backtrack /= num_launch;
+										avg_restart /= num_launch;
+										//avg_runtime /= num_launch;
+										avg_optimal /= num_launch;
+									
+
+											System.out.println( "d OBJECTIVE    " +   avg_obj );
+					
+											System.out.println( "d OPTIMAL      " +   avg_optimal );
+					
+											System.out.println( "d RUNTIME      " +   avg_runtime );
+											System.out.println( "d NODES        " +   avg_node );
+											System.out.println( "d BACKTRACKS   " +   avg_backtrack );
+											System.out.println( "d FAILS        " +   avg_fail );
+											System.out.println( "d RESTARTS     " +   avg_restart);
+											
+											System.out.println( "d NUMSAT       " +   num_satisfiable );
+
+										
+									
+									} else {
+										re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, true, seed);
+									}
 								} else {
 
 									/// SCHEDULING STUFF
@@ -144,7 +244,7 @@ public class RankingExperiment {
 
 
 
-									re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff, restarts, seed, showopt);
+									re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff, use_restarts, seed, showopt);
 								}
 
         }
@@ -283,9 +383,9 @@ public class RankingExperiment {
 						}
 					}
 					
-					if((showopt&8)>0) {
-						print_statistics(solver);
-					}
+					//if((showopt&8)>0) {
+					print_statistics(solver, ((showopt&8)>0));
+					//}
 					
 				}
 
@@ -390,13 +490,80 @@ public class RankingExperiment {
 					
 					
 				}
+				
+				
+				private void post_random_domain_reduction(IntVar[] X, Solver solver, int seed) {
+					java.util.Random random = new java.util.Random(seed);
+					
+					int N = X.length;
+					
+					for(int i=0; i<N/3; ++i) {
+
+						int bound_a = 1+random.nextInt(N);
+
+						//System.out.println( "[1, " + bound_a + "]");
+						
+						solver.post( ICF.arithm(X[i], "<=", bound_a ) );
+						
+					
+					}
+					
+					
+					for(int i=N/3; i<N; ++i) {
+						
+						double d = random.nextGaussian();
+
+						if(d>=0) {
+							d = 1-d;
+						} else {
+							d = -1-d; 
+						}
+
+						int bound_a = (int)(((d+1.0)/2.0) * (N+1)); 
+						
+						d = random.nextGaussian();
+						if(d>=0) {
+							d = 1-d;
+						} else {
+							d = -1-d; 
+						}
+
+						int bound_b = (int)(((d+1.0)/2.0) * (N+1)); 
+						
+						
+						if(bound_a<=bound_b) {
+							//System.out.println( "[" + bound_a + ", " + bound_b + "]");
+							
+							solver.post( ICF.arithm(X[i], "<=", bound_b ) );
+							solver.post( ICF.arithm(X[i], ">=", bound_a ) );
+							
+						} else {
+							//System.out.println( "[" + bound_b + ", " + bound_a + "]");
+							
+							solver.post( ICF.arithm(X[i], "<=", bound_a ) );
+							solver.post( ICF.arithm(X[i], ">=", bound_b ) );
+						}
+						
+					}
+					
+				}
+				
 
 
-        public void footRule(int N, boolean perm, int type, int decomp, int time_cutoff, int showopt) {
+        public void footRule(int N, boolean perm, int type, int decomp, int time_cutoff, int showopt, boolean clue, boolean dom_red, int seed) {
+					
+					
+					
                 Solver solver = new Solver("Correlation");
 
                 IntVar[] X = VF.integerArray("X", N, 1, N, solver);
                 IntVar[] Y = VF.integerArray("Y", N, 1, N, solver);
+								
+								if(dom_red) {
+									post_random_domain_reduction(X, solver, seed);
+									post_random_domain_reduction(Y, solver, seed+1);
+								}
+
 
                 if(perm) {
                         solver.post(ICF.alldifferent(X));
@@ -455,8 +622,11 @@ public class RankingExperiment {
 
                 IntVar Distance = VF.bounded("TotalDistance", 0, maxD, solver);
                 solver.post(ICF.sum(D, Distance));
-								//solver.post( ICF.arithm( Distance, "=", maxD ) );
-
+								
+								if(clue) {
+									solver.post( ICF.arithm( Distance, ">=", 3*maxD/4 ) );
+								}
+								
                 IntVar Objective = null;
 
 
@@ -480,7 +650,7 @@ public class RankingExperiment {
 	
                 //solver.set(new StrategiesSequencer(ISF.domOverWDeg(X, 123), ISF.domOverWDeg(Y, 123))); //, ISF.lexico_LB(Objective)));
 
-                solver.set( ISF.sequencer(ISF.lexico_LB(X), ISF.lexico_LB(Y)));
+                solver.set( ISF.sequencer(ISF.lexico_LB(X), ISF.lexico_LB(Y)) );
 
 								if(time_cutoff > 0) {
 									SMF.limitTime(solver, time_cutoff);
@@ -560,10 +730,10 @@ public class RankingExperiment {
 									}
 								}
 								
-								if((showopt&8)>0) {
-									print_statistics(solver);
+								//if((showopt&8)>0) {
+									print_statistics(solver, ((showopt&8)>0));
 									//System.out.println(solver.getMeasures().toString());
-								}
+									//}
 								//System.out.println(solver.getMeasures().toOneShortLineString() + "\n");
 
 
@@ -581,22 +751,41 @@ public class RankingExperiment {
 				}
 				
 				
-				public void print_statistics(Solver solver) {
+				public void print_statistics(Solver solver, boolean doprint) {
 					IMeasures stats = solver.getMeasures();
 					
-					System.out.println( "d OBJECTIVE    " +   stats.getBestSolutionValue() );
 					
-					System.out.println( "d OPTIMAL      " +   stats.isObjectiveOptimal() );
+					objective = (int)(stats.getBestSolutionValue());
+					num_node = stats.getNodeCount();
+					num_backtrack = stats.getBackTrackCount();
+					num_fail = stats.getFailCount();
+					num_restart = stats.getRestartCount();
+					optimal = stats.isObjectiveOptimal();
+					runtime = stats.getTimeCount();
+					num_solution = stats.getSolutionCount();
 					
-					System.out.println( "d RUNTIME      " +   stats.getTimeCount() );
-					System.out.println( "d NODES        " +   stats.getNodeCount() );
-					System.out.println( "d BACKTRACKS   " +   stats.getBackTrackCount() );
-					System.out.println( "d FAILS        " +   stats.getFailCount() );
-					System.out.println( "d RESTARTS     " +   stats.getRestartCount() );
-					System.out.println( "d PROPAGATIONS " +   stats.getPropagationsCount() );
-					System.out.println( "d MEMORY       " +   stats.getUsedMemory() );
+					if(doprint)
+						print_stored_statistics();
+				}
 					
-					System.out.println( "d NUMSOLUTIONS " +  stats.getSolutionCount() );
+				public void print_stored_statistics() {
+					System.out.println( "d OBJECTIVE    " +   objective );
+					
+					System.out.println( "d OPTIMAL      " +   optimal );
+					
+					System.out.println( "d RUNTIME      " +   runtime );
+					System.out.println( "d NODES        " +   num_node );
+					System.out.println( "d BACKTRACKS   " +   num_backtrack );
+					System.out.println( "d FAILS        " +   num_fail );
+					System.out.println( "d RESTARTS     " +   num_restart );
+					// System.out.println( "d PROPAGATIONS " +   stats.getPropagationsCount() );
+					// System.out.println( "d MEMORY       " +   stats.getUsedMemory() );
+					//
+					System.out.println( "d NUMSOLUTIONS " +  num_solution );
+					
+					
+					
+					
 				}
 				
         //Chatterbox.showDecisions(solver);
