@@ -27,26 +27,30 @@ def get_cmdline():
     parser.add_argument('--decomp',type=str, default='no',help='decompose ranking',choices=['no','gcc','sort'])
     parser.add_argument('--schedule',action='store_true',help='scheduling problem (default correlation)')
     parser.add_argument('--restart',action='store_true',help='use restart')
+    parser.add_argument('--runs',type=int,default=1,help='number of runs')
+    
 
     args = parser.parse_args()
 
 
     showopt = 0;
-    things_to_show = set(args.show)
-    if "decision" in things_to_show:
-        showopt += 1
-    if "solution" in things_to_show:
-        showopt += 2
-    if "model" in things_to_show:
-        showopt += 4
-    if "statistics" in things_to_show:
-        showopt += 8
-    if "improvement" in things_to_show:
-        showopt += 16
-    if "outcome" in things_to_show:
-        showopt += 32
     
-    cmdargs = [str(args.length), str(args.rank), args.type, str(args.decomp), str(args.schedule), str(args.time), str(args.restart), str(args.seed), str(showopt)] #, args.show, str(args.time), str(args.node), str(args.seed)]
+    if args.show != None:
+        things_to_show = set(args.show)
+        if "decision" in things_to_show:
+            showopt += 1
+        if "solution" in things_to_show:
+            showopt += 2
+        if "model" in things_to_show:
+            showopt += 4
+        if "statistics" in things_to_show:
+            showopt += 8
+        if "improvement" in things_to_show:
+            showopt += 16
+        if "outcome" in things_to_show:
+            showopt += 32
+    
+    cmdargs = [str(args.length), str(args.rank), args.type, str(args.decomp), str(args.schedule), str(args.time), str(args.restart), str(args.seed), str(showopt), str(args.runs)] #, args.show, str(args.time), str(args.node), str(args.seed)]
     
     #chococmd = ['java', '-ea', '-cp', 'lib/choco-solver-3.3.1.jar:lib/trove-3.0.0.jar:lib/slf4j-1.7.13/slf4j-simple-1.7.13.jar:lib/slf4j-1.7.13/slf4j-api-1.7.13.jar:out:.', 'RankingExperiment']
     
@@ -84,7 +88,7 @@ def run_correlation_experiments(typecor, cutoff):
     
     methods = ['no', 'gcc', 'sort']
     
-    length = 4
+    length = 5
     
     runtimes = dict(zip(methods, [0 for i in range(len(methods))]))
     
@@ -103,7 +107,7 @@ def run_correlation_experiments(typecor, cutoff):
             
                 cmdline = [cmd for cmd in chocoprefix]
                 
-                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8']
+                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', '20']
                 
                 #cmdline.extend(['--rank', '--time', str(cutoff), '--length', str(length), '--type', typecor, '--show', 'statistics', '--decomp', method])
                 cmdline.extend( cmdargs )
@@ -128,7 +132,7 @@ if __name__ == '__main__':
         run_cmdline(get_cmdline())
     else:
         print "run experiments"
-        run_correlation_experiments('anticorrelation', 20000)
+        run_correlation_experiments('uncorrelation', 36000000)
 
 
 
