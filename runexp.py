@@ -28,7 +28,7 @@ def get_cmdline():
     parser.add_argument('--schedule',action='store_true',help='scheduling problem (default correlation)')
     parser.add_argument('--restart',action='store_true',help='use restart')
     parser.add_argument('--runs',type=int,default=1,help='number of runs')
-    #parser.add_argument('--prune',action='store_true',help='randomly prune bounds')
+    parser.add_argument('--prune',action='store_true',help='randomly prune bounds')
     
 
     args = parser.parse_args()
@@ -142,9 +142,9 @@ def run_correlation_experiments(typecor, cutoff, nruns):
         
         print 'run for n =', length
         
+        stop = True
         for method in methods:
             
-            stop = True
             if 1000*runtimes[method] < cutoff-1000:
                 stop = False
                 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         run_cmdline(get_cmdline())
     else:
         print "run experiments"
-        run_correlation_experiments('anticorrelation', 1200000, 1)
+        run_correlation_experiments('uncorrelation', 1200000, 100)
 
 
 

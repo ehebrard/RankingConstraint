@@ -181,7 +181,7 @@ public class RankingExperiment {
 										
 									
 									} else {
-										re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, false, seed);
+										re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, true, seed);
 									}
 								} else {
 
@@ -582,7 +582,55 @@ public class RankingExperiment {
 				
 				
 				
-				private void post_random_domain_reduction(IntVar[] X, Solver solver, int seed) {
+				private void post_random_domain_reduction(IntVar[] X, Solver solver, double p, int seed) {
+					java.util.Random random = new java.util.Random(seed);
+					
+					int N = X.length;
+					
+					int[] solution = new int[N];
+					//int[] sequence = new int[N];
+					solution[0] = 1;
+					
+					//System.out.print("sol: 1");
+					
+					for(int i=1; i<N; ++i) {
+						//sequence[i] = (i+1);
+						
+						double rd = random.nextFloat();
+						
+						if(rd<p) solution[i] = solution[i-1];
+						else solution[i] = (i+1);
+						
+						//System.out.print( " " + solution[i] );
+						
+					}
+					
+					//System.out.println();
+						
+					for(int i=0; i<N; ++i) {
+						int r = i+random.nextInt(N-i);
+						int v = solution[r];
+						solution[r] = solution[i];
+						solution[i] = v;
+						
+						int lb = 1;
+						if(v>1)
+							lb = 1+random.nextInt(v-1);
+						int ub = N;
+						if(v<N)
+							ub = v+random.nextInt(N-v);
+						
+						//System.out.println(  "[" + lb + " - " + v + " - " + ub + "]");
+						
+						solver.post( ICF.arithm(X[i], ">=", lb ) );
+						solver.post( ICF.arithm(X[i], "<=", ub ) );
+					}
+					
+				}
+				
+				
+				
+				private void post_random_domain_reduction_old(IntVar[] X, Solver solver, int seed) {
 					java.util.Random random = new java.util.Random(seed);
 					
 					int N = X.length;
@@ -677,8 +725,8 @@ public class RankingExperiment {
                 IntVar[] Y = VF.integerArray("Y", N, 1, N, solver);
 								
 								if(dom_red) {
-									post_random_domain_reduction(X, solver, seed);
-									post_random_domain_reduction(Y, solver, seed+1);
+									post_random_domain_reduction(X, solver, 0.5, seed);
+									post_random_domain_reduction(Y, solver, 0.5, seed+1);
 								}
 
 
