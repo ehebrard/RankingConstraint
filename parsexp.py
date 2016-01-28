@@ -56,17 +56,19 @@ def plot_data(resfiles):
     T = {}.fromkeys(methods)
     
     for method in methods:
-        T[method] = [float(rawdata[method][length]['RUNTIME']) for length in lengths]
+        T[method] = [float(rawdata[method][length]['RUNTIME']) for length in lengths if rawdata[method].has_key(length)]
+        #if len(T[method]) < len(X):
+            
 
     
     plt.tick_params(axis='both', which='both', bottom='off', top='off',
                     labelbottom='on', left='off', right='off', labelleft='on')
                     
-    plt.yscale('log')
+    #plt.yscale('log')
     
-    plt.plot(X,T['no'])
-    plt.plot(X,T['gcc'])
-    plt.plot(X,T['sort'])
+    plt.plot(X[:len(T['no'])],T['no'])
+    plt.plot(X[:len(T['gcc'])],T['gcc'])
+    #plt.plot(X,T['sort'])
     
     plt.savefig('runtime.png', bbox_inches='tight')
         
