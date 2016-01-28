@@ -86,7 +86,7 @@ def run_correlation_experiments(typecor, cutoff):
     
     stop = False
     
-    methods = ['no', 'gcc'] #, 'sort']
+    methods = ['no', 'gcc', 'sort']
     
     length = 5
     
@@ -107,7 +107,7 @@ def run_correlation_experiments(typecor, cutoff):
             
                 cmdline = [cmd for cmd in chocoprefix]
                 
-                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', '100']
+                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', '250']
                 
                 #cmdline.extend(['--rank', '--time', str(cutoff), '--length', str(length), '--type', typecor, '--show', 'statistics', '--decomp', method])
                 cmdline.extend( cmdargs )
@@ -116,6 +116,7 @@ def run_correlation_experiments(typecor, cutoff):
             
             
                 start = time.time() 
+                print ' '.join(cmdline)
                 run_cmdline_and_store(cmdline, key)
                 end = time.time() 
 
@@ -132,7 +133,11 @@ if __name__ == '__main__':
         run_cmdline(get_cmdline())
     else:
         print "run experiments"
+<<<<<<< HEAD
         run_correlation_experiments('uncorrelation', 300000)
+=======
+        run_correlation_experiments('uncorrelation', 1200000)
+>>>>>>> 910a5a72fd367d3de5b2c5c41e2b754ccaba73bc
 
 
 

@@ -98,9 +98,12 @@ public class RankingExperiment {
 										int num_launch = 0;
 										//for(int i=0; i<num_launch; i++) {
 										while(num_launch < num_exp) {
-											//System.out.println("run " + (i+1));
+											
 											
 											int i=num_launch;
+											
+											//System.out.println("run " + (i+1));
+											
 											
 											re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, seed+i);
 											objectives[i] = re.objective;
@@ -244,13 +247,13 @@ public class RankingExperiment {
 
 
 
-									re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff, use_restarts, seed, showopt);
+									re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff, use_restarts, true, seed, showopt);
 								}
 
         }
 				
 				
-				public void watScheduling(int num_type, int num_task, int[][] duration, int[][] demand, int capacity, int decomp, int time_cutoff, boolean restarts, int seed, int showopt) {
+				public void watScheduling(int num_type, int num_task, int[][] duration, int[][] demand, int capacity, int decomp, int time_cutoff, boolean restarts, boolean dom_red, int seed, int showopt) {
 					Solver solver = new Solver("Scheduling");
 					
 					int horizon = 0;
@@ -264,6 +267,14 @@ public class RankingExperiment {
 					IntVar[][] starts = VF.boundedMatrix("s", num_type, num_task, 0, horizon, solver);
 					IntVar[][] durs   = VF.boundedMatrix("p", num_type, num_task, 0, horizon, solver);
 					IntVar[][] ends   = VF.boundedMatrix("e", num_type, num_task, 0, horizon, solver);
+					
+					
+					if(dom_red) {
+						for(int t=0; t<num_type; t++) {
+							post_random_domain_reduction(starts[t], 0, horizon, solver, seed+t);
+						}
+					}
+					
 					
 					IntVar[] demands = new IntVar[num_type*num_task];
 					
@@ -492,60 +503,156 @@ public class RankingExperiment {
 				}
 				
 				
+				// private void post_random_domain_reduction(IntVar[] X, Solver solver, int seed) {
+				// 	java.util.Random random = new java.util.Random(seed);
+				//
+				// 	int N = X.length;
+				//
+				// 	// for(int i=0; i<N/3; ++i) {
+				// 	//
+				// 	// 	int bound_a = 1+random.nextInt(N);
+				// 	//
+				// 	// 	//System.out.println( "[1, " + bound_a + "]");
+				// 	//
+				// 	// 	solver.post( ICF.arithm(X[i], "<=", bound_a ) );
+				// 	//
+				// 	//
+				// 	// }
+				//
+				//
+				// 	for(int i=0; i<N; ++i) {
+				//
+				// 		int bound_b = 1;
+				// 		int bound_a = N;
+				//
+				// 		double d = random.nextGaussian();///2.0;
+				// 		while(d>1 || d<-1) d = random.nextGaussian();///2.0;
+				//
+				// 		if(d>=0) {
+				// 			d = 1-d;
+				// 		} else {
+				// 			d = -1-d;
+				// 		}
+				//
+				// 		bound_a = (int)(((d+1.0)/2.0) * (N+1));
+				//
+				//
+				//
+				// 		if(random.nextInt(5)>0) {
+				//
+				// 			d = random.nextGaussian();///2.0;
+				// 			while(d>1 || d<-1) d = random.nextGaussian();///2.0;
+				// 			//d = random.nextGaussian();
+				// 			if(d>=0) {
+				// 				d = 1-d;
+				// 			} else {
+				// 				d = -1-d;
+				// 			}
+				//
+				// 			bound_b = (int)(((d+1.0)/2.0) * (N+1));
+				//
+				// 		}
+				//
+				//
+				// 		if(bound_a<=bound_b) {
+				// 			System.out.println( ((d+1.0)/2.0) + ": [" + bound_a + ", " + bound_b + "]");
+				//
+				// 			solver.post( ICF.arithm(X[i], "<=", bound_b ) );
+				// 			solver.post( ICF.arithm(X[i], ">=", bound_a ) );
+				//
+				// 		} else {
+				// 			System.out.println( ((d+1.0)/2.0) + ": [" + bound_b + ", " + bound_a + "]");
+				//
+				// 			solver.post( ICF.arithm(X[i], "<=", bound_a ) );
+				// 			solver.post( ICF.arithm(X[i], ">=", bound_b ) );
+				// 		}
+				//
+				// 	}
+				//
+				// }
+				
+				
+				
 				private void post_random_domain_reduction(IntVar[] X, Solver solver, int seed) {
 					java.util.Random random = new java.util.Random(seed);
 					
 					int N = X.length;
 					
-					for(int i=0; i<N/3; ++i) {
-
-						int bound_a = 1+random.nextInt(N);
-
-						//System.out.println( "[1, " + bound_a + "]");
+					for(int i=0; i<N; ++i) {
 						
-						solver.post( ICF.arithm(X[i], "<=", bound_a ) );
+						int l = 2;
+						int b = 5;
+						int u = 1;
+						int n = 2;
 						
-					
-					}
-					
-					
-					for(int i=N/3; i<N; ++i) {
-						
-						double d = random.nextGaussian();
-
-						if(d>=0) {
-							d = 1-d;
-						} else {
-							d = -1-d; 
-						}
-
-						int bound_a = (int)(((d+1.0)/2.0) * (N+1)); 
-						
-						d = random.nextGaussian();
-						if(d>=0) {
-							d = 1-d;
-						} else {
-							d = -1-d; 
-						}
-
-						int bound_b = (int)(((d+1.0)/2.0) * (N+1)); 
+						int btype = random.nextInt(5);
 						
 						
-						if(bound_a<=bound_b) {
-							//System.out.println( "[" + bound_a + ", " + bound_b + "]");
+						if(btype<l) {
+							int ub = 1+random.nextInt(N);
 							
-							solver.post( ICF.arithm(X[i], "<=", bound_b ) );
-							solver.post( ICF.arithm(X[i], ">=", bound_a ) );
+							//System.out.println(  "[" + 1 + ", " + ub + "]");
 							
+							solver.post( ICF.arithm(X[i], "<=", ub ) );
+						} else if(btype<l+b) {
+							int lb = 1+random.nextInt(N);
+							int ub = 1+random.nextInt(N);
+							
+							if(lb>ub) {
+								int aux = lb;
+								lb = ub;
+								ub = aux;
+							}
+							
+							//System.out.println(  "[" + lb + ", " + ub + "]");
+							
+							solver.post( ICF.arithm(X[i], ">=", lb ) );
+							solver.post( ICF.arithm(X[i], "<=", ub ) );
+						} else if(btype<l+b+u) {
+							int lb = 1+random.nextInt(N);
+							
+							//System.out.println(  "[" + lb + ", " + N + "]");
+							
+							solver.post( ICF.arithm(X[i], ">=", lb ) );
 						} else {
-							//System.out.println( "[" + bound_b + ", " + bound_a + "]");
 							
-							solver.post( ICF.arithm(X[i], "<=", bound_a ) );
-							solver.post( ICF.arithm(X[i], ">=", bound_b ) );
+							//System.out.println(  "[" + 1 + ", " + N + "]");
+							
 						}
 						
 					}
 					
+				}
+				
+				
+				
+				private void post_random_domain_reduction(IntVar[] X, int lb, int ub, Solver solver, int seed) {
+					java.util.Random random = new java.util.Random(seed);
+					
+					int N = X.length;
+					
+					
+					for(int i=0; i<N; ++i) {
+
+						int bound = 0;
+						
+						if(random.nextInt(3)>0) {
+						
+							double d = random.nextGaussian()/3.0;
+
+							if(d<0)	d = -d;
+
+
+							bound = lb+(int)(d * (ub-lb+1)); 
+						
+							System.out.println( d + ": [" + bound + ", " + ub + "]");
+							
+							solver.post( ICF.arithm(X[i], ">=", bound ) );
+										
+						}
+					
+					}
+
 				}
 				
 

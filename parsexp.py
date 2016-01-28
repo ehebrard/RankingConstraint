@@ -68,7 +68,8 @@ def plot_data(resfiles):
     
     plt.plot(X[:len(T['no'])],T['no'])
     plt.plot(X[:len(T['gcc'])],T['gcc'])
-    #plt.plot(X,T['sort'])
+    plt.plot(X[:len(T['sort'])],T['sort'])
+
     
     plt.savefig('runtime.png', bbox_inches='tight')
         
