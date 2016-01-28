@@ -80,6 +80,7 @@ public class RankingExperiment {
 								int seed = Integer.parseInt(args[7]);
 								int showopt = Integer.parseInt(args[8]);
 								int num_exp = Integer.parseInt(args[9]);
+								
 
 								if(!schedule) {
 									
@@ -172,7 +173,7 @@ public class RankingExperiment {
 										
 									
 									} else {
-										re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, true, seed);
+										re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, false, seed);
 									}
 								} else {
 
@@ -638,7 +639,8 @@ public class RankingExperiment {
 						
 						if(random.nextInt(3)>0) {
 						
-							double d = random.nextGaussian()/3.0;
+							double d = random.nextGaussian()/2.0;
+							while(d<-1 || d>1) d = random.nextGaussian()/2.0;
 
 							if(d<0)	d = -d;
 

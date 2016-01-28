@@ -64,7 +64,7 @@ def plot_data(resfiles):
     plt.tick_params(axis='both', which='both', bottom='off', top='off',
                     labelbottom='on', left='off', right='off', labelleft='on')
                     
-    #plt.yscale('log')
+    plt.yscale('log')
     
     plt.plot(X[:len(T['no'])],T['no'])
     plt.plot(X[:len(T['gcc'])],T['gcc'])
