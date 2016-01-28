@@ -133,7 +133,11 @@ if __name__ == '__main__':
         run_cmdline(get_cmdline())
     else:
         print "run experiments"
+<<<<<<< HEAD
+        run_correlation_experiments('uncorrelation', 300000)
+=======
         run_correlation_experiments('uncorrelation', 1200000)
+>>>>>>> 910a5a72fd367d3de5b2c5c41e2b754ccaba73bc
 
 
 
