@@ -28,7 +28,7 @@ def get_cmdline():
     parser.add_argument('--schedule',action='store_true',help='scheduling problem (default correlation)')
     parser.add_argument('--restart',action='store_true',help='use restart')
     parser.add_argument('--runs',type=int,default=1,help='number of runs')
-    #parser.add_argument('--prune',action='store_true',help='randomly prune bounds')
+    parser.add_argument('--prune',action='store_true',help='randomly prune bounds')
     
 
     args = parser.parse_args()

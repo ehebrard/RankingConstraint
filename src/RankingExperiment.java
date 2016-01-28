@@ -80,6 +80,7 @@ public class RankingExperiment {
 								int seed = Integer.parseInt(args[7]);
 								int showopt = Integer.parseInt(args[8]);
 								int num_exp = Integer.parseInt(args[9]);
+								boolean dom_red = (args[10].equals("True"));
 								
 
 								if(!schedule) {
@@ -169,19 +170,11 @@ public class RankingExperiment {
 											System.out.println( "d RESTARTS     " +   avg_restart);
 											
 											System.out.println( "d NUMSAT       " +   num_satisfiable );
-											
-											for(int i=0; i<num_launch; i++) {
-												
-												System.out.println( "x OBJECTIVE    " +   objectives[i] );
-												System.out.println( "x RUNTIME      " +   runtimes[i] );
-												System.out.println( "x NODES        " +   nodes[i] );
-												
-											}
 
 										
 									
 									} else {
-										re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, false, seed);
+										re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, dom_red, seed);
 									}
 								} else {
 
