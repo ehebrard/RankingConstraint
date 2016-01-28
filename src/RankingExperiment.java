@@ -168,6 +168,14 @@ public class RankingExperiment {
 											System.out.println( "d RESTARTS     " +   avg_restart);
 											
 											System.out.println( "d NUMSAT       " +   num_satisfiable );
+											
+											for(int i=0; i<num_launch; i++) {
+												
+												System.out.println( "x OBJECTIVE    " +   objectives[i] );
+												System.out.println( "x RUNTIME      " +   runtimes[i] );
+												System.out.println( "x NODES        " +   nodes[i] );
+												
+											}
 
 										
 									
