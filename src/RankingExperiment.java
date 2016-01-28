@@ -582,7 +582,7 @@ public class RankingExperiment {
 				
 				
 				
-				private void post_random_domain_reduction(IntVar[] X, Solver solver, double p, int seed) {
+				private void post_random_domain_reduction(IntVar[] X, Solver solver, double p, int seed, boolean aligned) {
 					java.util.Random random = new java.util.Random(seed);
 					
 					int N = X.length;
@@ -608,10 +608,14 @@ public class RankingExperiment {
 					//System.out.println();
 						
 					for(int i=0; i<N; ++i) {
-						int r = i+random.nextInt(N-i);
-						int v = solution[r];
-						solution[r] = solution[i];
-						solution[i] = v;
+						int v = solution[i];
+						
+						if(!aligned) {
+							int r = i+random.nextInt(N-i);
+							v = solution[r];
+							solution[r] = solution[i];
+							solution[i] = v;
+						}
 						
 						int lb = 1;
 						if(v>1)
