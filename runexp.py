@@ -142,9 +142,9 @@ def run_correlation_experiments(typecor, cutoff, nruns):
         
         print 'run for n =', length
         
+        stop = True
         for method in methods:
             
-            stop = True
             if 1000*runtimes[method] < cutoff-1000:
                 stop = False
                 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         run_cmdline(get_cmdline())
     else:
         print "run experiments"
-        run_correlation_experiments('anticorrelation', 1200000, 1)
+        run_correlation_experiments('uncorrelation', 1200000, 100)
 
 
 
