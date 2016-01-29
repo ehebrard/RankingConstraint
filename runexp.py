@@ -28,8 +28,8 @@ def get_cmdline():
     parser.add_argument('--schedule',action='store_true',help='scheduling problem (default correlation)')
     parser.add_argument('--restart',action='store_true',help='use restart')
     parser.add_argument('--runs',type=int,default=1,help='number of runs')
-    parser.add_argument('--prune',action='store_true',help='randomly prune bounds')
-    
+    parser.add_argument('--prune',type=float,default=0,help='randomly prune bounds (value controls embedded solution type)')
+    parser.add_argument('--aligned',action='store_true',help='whether embedded solutions should be aligned')
 
     args = parser.parse_args()
 
@@ -51,7 +51,7 @@ def get_cmdline():
         if "outcome" in things_to_show:
             showopt += 32
     
-    cmdargs = [str(args.length), str(args.rank), args.type, str(args.decomp), str(args.schedule), str(args.time), str(args.restart), str(args.seed), str(showopt), str(args.runs), str(args.prune)] #, args.show, str(args.time), str(args.node), str(args.seed)]
+    cmdargs = [str(args.length), str(args.rank), args.type, str(args.decomp), str(args.schedule), str(args.time), str(args.restart), str(args.seed), str(showopt), str(args.runs), str(args.prune), str(args.aligned)] #, args.show, str(args.time), str(args.node), str(args.seed)]
     
     #chococmd = ['java', '-ea', '-cp', 'lib/choco-solver-3.3.1.jar:lib/trove-3.0.0.jar:lib/slf4j-1.7.13/slf4j-simple-1.7.13.jar:lib/slf4j-1.7.13/slf4j-api-1.7.13.jar:out:.', 'RankingExperiment']
     
@@ -153,7 +153,7 @@ def run_correlation_experiments(typecor, cutoff, nruns):
             
                 cmdline = [cmd for cmd in chocoprefix]
                 
-                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', str(nruns)]
+                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', str(nruns), '1.0', str(False)]
                 
                 #cmdline.extend(['--rank', '--time', str(cutoff), '--length', str(length), '--type', typecor, '--show', 'statistics', '--decomp', method])
                 cmdline.extend( cmdargs )
@@ -179,7 +179,7 @@ if __name__ == '__main__':
         run_cmdline(get_cmdline())
     else:
         print "run experiments"
-        run_correlation_experiments('uncorrelation', 1200000, 100)
+        run_correlation_experiments('uncorrelation', 1200000, 250)
 
 
 
