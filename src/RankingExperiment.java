@@ -39,6 +39,7 @@ public class RankingExperiment {
 	public long num_restart;
 	public long num_solution;
 	public boolean optimal;
+	public boolean limitout;
 	public double runtime;
 	
 
@@ -95,6 +96,7 @@ public class RankingExperiment {
 				long[] restarts = new long[num_exp];
 				long[] nsols = new long[num_exp];
 				boolean[] optimals = new boolean[num_exp];
+				boolean[] limitouts = new boolean[num_exp];
 				double[] runtimes = new double[num_exp];
 									
 									
@@ -104,24 +106,33 @@ public class RankingExperiment {
 																						
 					int i=num_launch;
 											
-					//System.out.println("run " + (i+1) + " " + esolt + " " + aligned);
+					
 											
-					re.footRule(length, perm, type, decomp, time_cutoff-(int)(1000*avg_runtime), 0, false, true, esolt, aligned, seed+i);
-					objectives[i] = re.objective;
-					nodes[i] = re.num_node;
-					backtracks[i] = re.num_backtrack;
-					fails[i] = re.num_fail;
-					restarts[i] = re.num_restart;
-					nsols[i] = re.num_solution;
-					nsols[i] = re.num_solution;
-					optimals[i] = re.optimal;
-					runtimes[i] = re.runtime;
 											
-					avg_runtime += runtimes[i];
+					int limit = time_cutoff-(int)(1000*avg_runtime);
+					
+					if(limit>10) {
+						
+						//System.out.println("run " + (i+1) + " " + esolt + " " + aligned + " for " + limit + "ms");
+						
+						re.footRule(length, perm, type, decomp, limit, 0, false, true, esolt, aligned, seed+i);
+						objectives[i] = re.objective;
+						nodes[i] = re.num_node;
+						backtracks[i] = re.num_backtrack;
+						fails[i] = re.num_fail;
+						restarts[i] = re.num_restart;
+						nsols[i] = re.num_solution;
+						nsols[i] = re.num_solution;
+						optimals[i] = re.optimal;
+						limitouts[i] = re.limitout;
+						runtimes[i] = re.runtime;
+											
+						avg_runtime += runtimes[i];
 										
 											
-					num_launch++;
-					if(avg_runtime>time_cutoff) break;
+						num_launch++;
+					} else break;
+					//if(avg_runtime>time_cutoff) break;
 											
 				}
 										
@@ -134,6 +145,7 @@ public class RankingExperiment {
 				int avg_restart = 0;
 				int num_satisfiable = 0;
 										
+				int num_limit = 0;
 				double avg_optimal = 0;
 										
 				for(int i=0; i<num_launch; i++) {
@@ -145,6 +157,8 @@ public class RankingExperiment {
 											
 					if(optimals[i])	
 						avg_optimal += 1.0;
+					if(limitouts[i])
+						num_limit++;
 					if(nsols[i]>0)
 						num_satisfiable++;
 				}
@@ -160,6 +174,7 @@ public class RankingExperiment {
 									
 											
 				for(int i=0; i<num_launch; i++) {
+					System.out.println( "x LIMITOUT     " +   limitouts[i] );
 					System.out.println( "x OBJECTIVE    " +   objectives[i] );
 					System.out.println( "x RUNTIME      " +   runtimes[i] );
 					System.out.println( "x NODES        " +   nodes[i] );
@@ -178,6 +193,7 @@ public class RankingExperiment {
 											
 				System.out.println( "d NUMSAT       " +   num_satisfiable );
 				System.out.println( "d NUMFINISHED  " +   num_launch );
+				System.out.println( "d NUMLIMIT     " +   num_limit );
 										
 										
 									
@@ -197,6 +213,7 @@ public class RankingExperiment {
 			long[] restarts = new long[num_exp];
 			long[] nsols = new long[num_exp];
 			boolean[] optimals = new boolean[num_exp];
+			boolean[] limitouts = new boolean[num_exp];
 			double[] runtimes = new double[num_exp];
 									
 			int[][] dur = new int[M][length];
@@ -215,23 +232,28 @@ public class RankingExperiment {
 										
 				re.generate_tasks(dur, dem, seed+i);
 										
-				re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff-(int)(1000*avg_runtime), use_restarts, dom_red, esolt, seed+i, 0);
-				//re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, esolt, aligned, seed+i);
-				objectives[i] = re.objective;
-				nodes[i] = re.num_node;
-				backtracks[i] = re.num_backtrack;
-				fails[i] = re.num_fail;
-				restarts[i] = re.num_restart;
-				nsols[i] = re.num_solution;
-				nsols[i] = re.num_solution;
-				optimals[i] = re.optimal;
-				runtimes[i] = re.runtime;
+				int limit = time_cutoff-(int)(1000*avg_runtime);
+				
+				if(limit > 10) {
+					re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff-(int)(1000*avg_runtime), use_restarts, dom_red, esolt, seed+i, 0);
+					//re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, esolt, aligned, seed+i);
+					objectives[i] = re.objective;
+					nodes[i] = re.num_node;
+					backtracks[i] = re.num_backtrack;
+					fails[i] = re.num_fail;
+					restarts[i] = re.num_restart;
+					nsols[i] = re.num_solution;
+					nsols[i] = re.num_solution;
+					optimals[i] = re.optimal;
+					limitouts[i] = re.limitout;
+					runtimes[i] = re.runtime;
 										
-				avg_runtime += runtimes[i];
+					avg_runtime += runtimes[i];
 									
 										
-				num_launch++;
-				if(avg_runtime>time_cutoff) break;
+					num_launch++;
+				} else break;
+				//if(avg_runtime>time_cutoff) break;
 										
 			}
 									
@@ -245,6 +267,7 @@ public class RankingExperiment {
 			int num_satisfiable = 0;
 									
 			double avg_optimal = 0;
+			int num_limit = 0;
 									
 			for(int i=0; i<num_launch; i++) {
 				avg_obj += objectives[i];
@@ -255,6 +278,8 @@ public class RankingExperiment {
 										
 				if(optimals[i])	
 					avg_optimal += 1.0;
+				if(limitouts[i])	
+					num_limit++;
 				if(nsols[i]>0)
 					num_satisfiable++;
 			}
@@ -270,6 +295,7 @@ public class RankingExperiment {
 											
 										
 			for(int i=0; i<num_launch; i++) {
+				System.out.println( "x LIMITOUT     " +   limitouts[i] );
 				System.out.println( "x OBJECTIVE    " +   objectives[i] );
 				System.out.println( "x RUNTIME      " +   runtimes[i] );
 				System.out.println( "x NODES        " +   nodes[i] );
@@ -287,7 +313,8 @@ public class RankingExperiment {
 										
 			System.out.println( "d NUMSAT       " +   num_satisfiable );
 			System.out.println( "d NUMFINISHED  " +   num_launch );		
-
+			System.out.println( "d NUMLIMIT     " +   num_limit );
+			
 		}
 									
 	}
@@ -540,7 +567,7 @@ public class RankingExperiment {
 
 		solution[0] = 1;
 					
-		System.out.print("sol: 1");
+		//System.out.print("sol: 1");
 					
 		for(int i=1; i<N; ++i) {
 						
@@ -549,11 +576,11 @@ public class RankingExperiment {
 			if(rd<p) solution[i] = solution[i-1];
 			else solution[i] = (i+1);
 						
-			System.out.print( " " + solution[i] );
+			//System.out.print( " " + solution[i] );
 						
 		}
 					
-		System.out.println();
+		//System.out.println();
 						
 		for(int i=0; i<N; ++i) {
 			int v = solution[i];
@@ -572,7 +599,7 @@ public class RankingExperiment {
 			if(v<N)
 				ub = v+random.nextInt(N-v);
 						
-			System.out.println(  "[" + lb + " - " + v + " - " + ub + "]");
+			//System.out.println(  "[" + lb + " - " + v + " - " + ub + "]");
 						
 			solver.post( ICF.arithm(X[i], ">=", lb ) );
 			solver.post( ICF.arithm(X[i], "<=", ub ) );
@@ -708,9 +735,11 @@ public class RankingExperiment {
 
 		if(dom_red) {
 			if(esolt<1) {
+
 				sat_random_intervals(X, solver, esolt, seed, aligned);
 				sat_random_intervals(Y, solver, esolt, seed+1, aligned);
 			} else {
+
 				random_intervals(X, solver, seed);
 				random_intervals(Y, solver, seed+1);
 			}
@@ -864,6 +893,7 @@ public class RankingExperiment {
 		optimal = stats.isObjectiveOptimal();
 		runtime = stats.getTimeCount();
 		num_solution = stats.getSolutionCount();
+		limitout = solver.hasReachedLimit();
 					
 		if(doprint)
 			print_stored_statistics();
@@ -873,6 +903,7 @@ public class RankingExperiment {
 		System.out.println( "d OBJECTIVE    " +   objective );
 					
 		System.out.println( "d OPTIMAL      " +   optimal );
+		System.out.println( "d LIMITOUT     " +   limitout );
 					
 		System.out.println( "d RUNTIME      " +   runtime );
 		System.out.println( "d NODES        " +   num_node );
