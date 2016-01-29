@@ -106,7 +106,7 @@ public class RankingExperiment {
 											
 					//System.out.println("run " + (i+1) + " " + esolt + " " + aligned);
 											
-					re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, esolt, aligned, seed+i);
+					re.footRule(length, perm, type, decomp, time_cutoff-(int)(1000*avg_runtime), 0, false, true, esolt, aligned, seed+i);
 					objectives[i] = re.objective;
 					nodes[i] = re.num_node;
 					backtracks[i] = re.num_backtrack;
@@ -210,11 +210,11 @@ public class RankingExperiment {
 										
 				int i=num_launch;
 										
-				System.out.println("run " + (i+1));
+				//System.out.println("run " + (i+1));
 										
 				re.generate_tasks(dur, dem, seed+i);
 										
-				re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff, use_restarts, dom_red, esolt, seed+i, 0);
+				re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff-(int)(1000*avg_runtime), use_restarts, dom_red, esolt, seed+i, 0);
 				//re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, esolt, aligned, seed+i);
 				objectives[i] = re.objective;
 				nodes[i] = re.num_node;

@@ -83,58 +83,14 @@ def run_cmdline_and_store(chococmd, filename):
     ferr.close()
 
 
-# def run_correlation_experiments(typecor, cutoff):
-#
-#     stop = False
-#
-#     methods = ['no', 'gcc', 'sort']
-#
-#     length = 5
-#
-#     runtimes = dict(zip(methods, [0 for i in range(len(methods))]))
-#
-#     while not stop:
-#
-#         print 'run for n =', length
-#
-#         for method in methods:
-#
-#             stop = True
-#             if 1000*runtimes[method] < cutoff-1000:
-#                 stop = False
-#
-#                 print method,
-#                 sys.stdout.flush()
-#
-#                 cmdline = [cmd for cmd in chocoprefix]
-#
-#                 cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', '250']
-#
-#                 #cmdline.extend(['--rank', '--time', str(cutoff), '--length', str(length), '--type', typecor, '--show', 'statistics', '--decomp', method])
-#                 cmdline.extend( cmdargs )
-#
-#                 key = 'experiments/'+typecor+'_'+method+'_'+str(length)
-#
-#
-#                 start = time.time()
-#                 print ' '.join(cmdline)
-#                 run_cmdline_and_store(cmdline, key)
-#                 end = time.time()
-#
-#                 runtimes[method] = (end-start)
-#
-#                 print runtimes[method]
-#
-#         length += 1
         
-        
-def run_correlation_experiments(typecor, cutoff, nruns):
+def run_experiments(typecor, methods, cutoff, init_length, nruns):
     
     stop = False
     
-    methods = ['no', 'gcc', 'sort']
+    #methods = ['no', 'gcc', 'sort']
     
-    length = 5
+    length = init_length
     
     runtimes = dict(zip(methods, [0 for i in range(len(methods))]))
     
@@ -153,7 +109,10 @@ def run_correlation_experiments(typecor, cutoff, nruns):
             
                 cmdline = [cmd for cmd in chocoprefix]
                 
-                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', str(nruns), '1.0', str(False)]
+                if typecor == 'schedule':
+                    cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), '12345', '8', str(nruns), '0', str(False)]
+                else:
+                    cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', str(nruns), '1.0', str(False)]
                 
                 #cmdline.extend(['--rank', '--time', str(cutoff), '--length', str(length), '--type', typecor, '--show', 'statistics', '--decomp', method])
                 cmdline.extend( cmdargs )
@@ -172,6 +131,24 @@ def run_correlation_experiments(typecor, cutoff, nruns):
           
         length += 1
         
+        
+def generate_command_lines(typecor, methods, cutoff, init_length, limit, nruns):
+    
+    length = init_length
+    for length in range(init_length, limit+1):
+        for method in methods:
+            cmdline = [cmd for cmd in chocoprefix]
+            
+            if typecor == 'schedule':
+                cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), '12345', '8', str(nruns), '0', str(False)]
+            else:
+                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', str(nruns), '1.0', str(False)]
+
+            cmdline.extend( cmdargs )
+            outfile = 'experiments/'+typecor+'_'+method+'_'+str(length)+'.res'            
+    
+            print ' '.join(cmdline), '>', outfile, ';'
+        
 
 
 if __name__ == '__main__':
@@ -179,7 +156,10 @@ if __name__ == '__main__':
         run_cmdline(get_cmdline())
     else:
         print "run experiments"
-        run_correlation_experiments('uncorrelation', 1200000, 250)
+        #run_experiments('schedule', ['no', 'gcc', 'sort'], 3600000, 7, 20)
+        
+        generate_command_lines('schedule', ['no', 'gcc', 'sort'], 10800000, 5, 15, 50)
+        #generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 10800000, 5, 20, 1000)
 
 
 
