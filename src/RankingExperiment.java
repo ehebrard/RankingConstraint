@@ -52,7 +52,6 @@ public class RankingExperiment {
 
 
 
-
 	/**
 		* fonction principale pour tester que la classe fonctionne bien
 		* @param args
@@ -170,6 +169,7 @@ public class RankingExperiment {
 					
 				System.out.println( "d OPTIMAL      " +   avg_optimal );
 					
+
 				System.out.println( "d RUNTIME      " +   avg_runtime );
 				System.out.println( "d NODES        " +   avg_node );
 				System.out.println( "d BACKTRACKS   " +   avg_backtrack );
@@ -200,6 +200,7 @@ public class RankingExperiment {
 									
 			int[][] dur = new int[M][length];
 			int[][] dem = new int[M][length];
+
 
 			double avg_runtime = 0;
 			int num_launch = 0;
@@ -257,6 +258,7 @@ public class RankingExperiment {
 					num_satisfiable++;
 			}
 									
+
 			avg_obj /= num_launch;
 			avg_node /= num_launch;
 			avg_fail /= num_launch;
@@ -702,6 +704,7 @@ public class RankingExperiment {
 		IntVar[] X = VF.integerArray("X", N, 1, N, solver);
 		IntVar[] Y = VF.integerArray("Y", N, 1, N, solver);
 								
+
 		if(dom_red) {
 			if(esolt<1) {
 				sat_random_intervals(X, solver, esolt, seed, aligned);
