@@ -177,6 +177,7 @@ public class RankingExperiment {
 				System.out.println( "d RESTARTS     " +   avg_restart);
 											
 				System.out.println( "d NUMSAT       " +   num_satisfiable );
+				System.out.println( "d NUMFINISHED  " +   num_launch );
 										
 										
 									
@@ -285,7 +286,7 @@ public class RankingExperiment {
 			System.out.println( "d RESTARTS     " +   avg_restart);
 										
 			System.out.println( "d NUMSAT       " +   num_satisfiable );
-							
+			System.out.println( "d NUMFINISHED  " +   num_launch );		
 
 		}
 									
