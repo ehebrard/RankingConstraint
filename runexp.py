@@ -144,9 +144,9 @@ def generate_command_lines(typecor, methods, cutoff, init_length, limit, nruns, 
             cmdline = [cmd for cmd in chocoprefix]
             
             if typecor == 'schedule':
-                cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), '12345', '8', str(nruns), str(red_type), str(False)]
+                cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), '1234', '8', str(nruns), str(red_type), str(False)]
             else:
-                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '12345', '8', str(nruns), str(red_type), str(True)]
+                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '1234', '8', str(nruns), str(red_type), str(True)]
 
             cmdline.extend( cmdargs )
             outfile = 'experiments/'+typecor+'_'+method+'_'+str(length)+'_'+suffix+'_.res'            
@@ -162,9 +162,9 @@ if __name__ == '__main__':
         #print "run experiments"
         #run_experiments('schedule', ['no', 'gcc', 'sort'], 3600000, 7, 20)
         
-        #generate_command_lines('schedule', ['no', 'gcc', 'sort'], 10800000, 5, 15, 50, 'batch')
-        generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 10800000, 5, 20, 1000, 'sat')
-        #generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 10800000, 5, 20, 1000, 'rand')
+        #generate_command_lines('schedule', ['no', 'gcc', 'sort'], 10800000, 5, 15, 25, 'batch')
+        #generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 10800000, 5, 20, 500, 'sat')
+        generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 10800000, 5, 20, 500, 'rand')
 
 
 

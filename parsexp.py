@@ -11,23 +11,30 @@ def get_cmdline():
     
     parser = argparse.ArgumentParser(description='Parse experiments')
 
-    parser.add_argument('--type',type=str,default="anticorrelation",help='type of relation',choices=["uncorrelation","correlation","anticorrelation","batchscheduling","projectscheduling"])
+    parser.add_argument('--type',type=str,default="anticorrelation",help='type of relation',choices=["uncorrelation","correlation","anticorrelation","schedule"])
+    parser.add_argument('--subtype',type=str,default="sat",help='subtype',choices=["sat","rand"])
+    parser.add_argument('--stat',type=str,default="RUNTIME",help='statistic',choices=['RUNTIME','NODES','BACKTRACKS','FAILS','RESTARTS','OPTIMAL','OBJECTIVE'])
     
     args = parser.parse_args()
     
-    return args.type
+    return args.type, args.subtype, args.stat
 
 
-def read_data(typeexp):
+def read_data(typeexp, st):
     
     getfile = subprocess.Popen(['ls', 'experiments/'], stdout=subprocess.PIPE);
-    allfiles = [line[:-1] for line in getfile.stdout if line[:len(typeexp)]==typeexp]
+ 
+    allfiles = None
+    if typeexp == 'schedule':
+        allfiles = [line[:-1] for line in getfile.stdout if line[:len(typeexp)]==typeexp]
+    else:
+        allfiles = [line[:-1] for line in getfile.stdout if line[:len(typeexp)]==typeexp and (line.find(st) == len(line)-(6+len(st)))]
     getfile.wait();
         
     return allfiles
 
     
-def plot_data(resfiles):
+def plot_data(resfiles, type_exp, stat):
     
     average = {}
     allpoints = {}
@@ -36,6 +43,10 @@ def plot_data(resfiles):
     
     methods = set([])
     lengths = set([])
+    
+    maxlength = 0
+    minval = None
+    maxval = None
     
     for filename in resfiles:
         count = 0
@@ -57,66 +68,151 @@ def plot_data(resfiles):
                 average[method] = {}
                 
             if not allpoints.has_key(method):    
-                stats = ['RUNTIME', 'OBJECTIVE', 'NODES']            
-                allpoints[method] = {}.fromkeys(stats)
-                for stat in stats:
-                    allpoints[method][stat] = []
+                allpoints[method] = {}
+                # stats = ['RUNTIME', 'OBJECTIVE', 'NODES']
+                # allpoints[method] = {}.fromkeys(stats)
+                # for stat in stats:
+                #     allpoints[method][stat] = []
                 
             average[method][length] = {}
             
+            empty = True
             for d in open('experiments/'+filename):
                 sd = d.split()
                 if d[0] == 'd':
+                    # print d,
+                    # print 'total', sd[1], '=', sd[2], '\n'
                     average[method][length][sd[1]] = sd[2]
+                    empty = False
                 elif d[0] == 'x':
                     count += 1
+                    if not allpoints[method].has_key(sd[1]):
+                        allpoints[method][sd[1]] = []
                     allpoints[method][sd[1]].append(sd[2])
             num_instance = count/3
+            
+            if not empty and maxlength<length:
+                maxlength = length
                 
-            average[method][length] = dict([(d.split()[1],d.split()[2]) for d in open('experiments/'+filename) if d[0]=='d'])
+                
+            #average[method][length] = dict([(d.split()[1],d.split()[2]) for d in open('experiments/'+filename) if d[0]=='d'])
             
             #print 'd['+method+']['+str(length)+'] =', rawdata[method][length]
             
     X = sorted(list(lengths))
     T = {}.fromkeys(methods)
     
+    
     for method in methods:
-        T[method] = [float(average[method][length]['RUNTIME']) for length in lengths if average[method].has_key(length)]
+        T[method] = []
+        for length in X:
+            t = 0
+            if average[method].has_key(length):
+                if average[method][length].has_key(stat):
+                    if stat == 'RUNTIME' or stat == 'OPTIMAL':
+                        t = float(average[method][length][stat])
+                    else:
+                        t = int(average[method][length][stat])
+                    if minval == None or minval > t:
+                        minval = t
+                    if maxval == None or maxval < t:
+                        maxval = t
+                    
+            T[method].append(t)
+        
+        #T[method] = [float(average[method][length]['RUNTIME']) for length in X if average[method].has_key(length)]
         #if len(T[method]) < len(X):
-            
-
+ 
     
     plt.tick_params(axis='both', which='both', bottom='off', top='off',
                     labelbottom='on', left='off', right='off', labelleft='on')
-                    
-                    
-    
-    rX = []
-    for length in lengths:
-        rX.extend([length] * num_instance)
+               
+               
+    gaps = [1, 10, 100, 250, 500, 1000, 2500, 10000, 25000, 100000]
+               
+    if type_exp == 'schedule':
         
-    #print rX
-                    
-                    
-    plt.yscale('log')
+        ogap = (maxval - minval)/10
+        for g in gaps:
+            if g>ogap:
+                ogap = g
+                break
+                
+        print int(minval), '-', (int(minval)%ogap), '=', (int(minval) - (int(minval)%ogap)), ogap
+        
+        Y = range(int(minval) - (int(minval)%ogap), int(maxval), ogap)     
+        plt.xticks(X)
+        plt.yticks(Y) 
+        plt.ylabel('runtime (s)')
+        plt.xlabel('problem size')  
     
-    plt.plot(X[:len(T['no'])],T['no'])
-    plt.plot(X[:len(T['gcc'])],T['gcc'])
-    plt.plot(X[:len(T['sort'])],T['sort'])
+        ax = plt.subplot() 
     
-    #plt.plot(rX[:len(allpoints['gcc']['RUNTIME'])], allpoints['gcc']['RUNTIME'], 'o')
+        ax.spines['top'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
 
-    #print zip(rX[:len(allpoints['no']['RUNTIME'])], allpoints['no']['RUNTIME'])
+        for y in Y:
+            plt.plot(range(5, maxlength+1), [y] * len(range(5, maxlength+1)), '--',
+                     lw=0.5, color='black', alpha=0.3) 
 
+        plt.text(7.27, 700, 'Sortedness', color='red', rotation=63)
+        plt.text(7.37, 430, 'Gcc', color='green', rotation=43)
+        plt.text(7.27, 350, 'propagator', color='blue', rotation=38)
+        
+        
+        x1,x2,y1,y2 = plt.axis()
+        plt.axis((x1,maxlength,minval,maxval))
+        
+    else:
+        print maxlength
+        
+        X2 = range(X[0], maxlength, 2)
+        Y = [10**x for x in range(-1,10)]
+        plt.xticks(X2)
+        plt.yticks(Y) 
+        plt.ylabel('runtime (s)')
+        plt.xlabel('problem size')  
+        
+        plt.yscale('log')
+    
+        ax = plt.subplot() 
+    
+        ax.spines['top'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+
+        for y in Y:
+            plt.plot(X, [y] * len(X), '--',
+                     lw=0.5, color='black', alpha=0.3)   
+
+        plt.text(10.25, 1500, 'Sortedness', color='red', rotation=80)
+        plt.text(11.55, 400, 'Gcc', color='green', rotation=73)
+        plt.text(17.8, 700, 'propagator', color='blue', rotation=73)
+        
+        x1,x2,y1,y2 = plt.axis()
+
+        plt.axis((x1,x2,max(minval, 0.04),maxval+1000))
+
+    
+    
+    
+    plt.plot(X[:len(T['no'])],T['no'],lw=2)
+    plt.plot(X[:len(T['gcc'])],T['gcc'],lw=2)
+    plt.plot(X[:len(T['sort'])],T['sort'],lw=2)
     
     plt.savefig('runtime.png', bbox_inches='tight')
         
 
 
 if __name__ == '__main__':
-    type_exp = get_cmdline()
+    type_exp, sub_type, stat = get_cmdline()
     
-    plot_data(read_data(type_exp))
+    plot_data(read_data(type_exp, sub_type), type_exp, stat)
+    
+    #plot_data(read_data(type_exp), type_exp)
 
 
 

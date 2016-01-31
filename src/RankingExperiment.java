@@ -60,6 +60,10 @@ public class RankingExperiment {
 	public static void main(String[] args){
 								
 		RankingExperiment re = new RankingExperiment();
+		
+		//
+		// re.test();
+		// System.exit(1);
 
 
 		int length = Integer.parseInt(args[0]);
@@ -86,7 +90,7 @@ public class RankingExperiment {
 
 		if(!schedule) {
 									
-			System.out.println(num_exp);
+			//System.out.println(num_exp);
 									
 			if(num_exp>1) {
 				int[] objectives = new int[num_exp];
@@ -99,6 +103,7 @@ public class RankingExperiment {
 				boolean[] limitouts = new boolean[num_exp];
 				double[] runtimes = new double[num_exp];
 									
+				System.out.println( "d NUMINSTANCE    " +   num_exp );	
 									
 				double avg_runtime = 0;
 				int num_launch = 0;
@@ -111,9 +116,9 @@ public class RankingExperiment {
 											
 					int limit = time_cutoff-(int)(1000*avg_runtime);
 					
-					if(limit>10) {
+					if(limit>1000) {
 						
-						//System.out.println("run " + (i+1) + " " + esolt + " " + aligned + " for " + limit + "ms");
+						System.out.println("run " + (i+1) + " " + esolt + " " + aligned + " for " + limit + "ms");
 						
 						re.footRule(length, perm, type, decomp, limit, 0, false, true, esolt, aligned, seed+i);
 						objectives[i] = re.objective;
@@ -128,6 +133,14 @@ public class RankingExperiment {
 						runtimes[i] = re.runtime;
 											
 						avg_runtime += runtimes[i];
+						
+						
+						//for(int i=0; i<num_launch; i++) {
+							System.out.println( "x LIMITOUT     " +   limitouts[i] );
+							System.out.println( "x OBJECTIVE    " +   objectives[i] );
+							System.out.println( "x RUNTIME      " +   runtimes[i] );
+							System.out.println( "x NODES        " +   nodes[i] );
+							//}
 										
 											
 						num_launch++;
@@ -173,12 +186,12 @@ public class RankingExperiment {
 									
 									
 											
-				for(int i=0; i<num_launch; i++) {
-					System.out.println( "x LIMITOUT     " +   limitouts[i] );
-					System.out.println( "x OBJECTIVE    " +   objectives[i] );
-					System.out.println( "x RUNTIME      " +   runtimes[i] );
-					System.out.println( "x NODES        " +   nodes[i] );
-				}
+				// for(int i=0; i<num_launch; i++) {
+				// 	System.out.println( "x LIMITOUT     " +   limitouts[i] );
+				// 	System.out.println( "x OBJECTIVE    " +   objectives[i] );
+				// 	System.out.println( "x RUNTIME      " +   runtimes[i] );
+				// 	System.out.println( "x NODES        " +   nodes[i] );
+				// }
 
 				System.out.println( "d OBJECTIVE    " +   avg_obj );
 					
@@ -222,6 +235,8 @@ public class RankingExperiment {
 
 			double avg_runtime = 0;
 			int num_launch = 0;
+			
+			System.out.println( "d NUMINSTANCE    " +   num_exp );
 
 			while(num_launch < num_exp) {
 										
@@ -234,7 +249,7 @@ public class RankingExperiment {
 										
 				int limit = time_cutoff-(int)(1000*avg_runtime);
 				
-				if(limit > 10) {
+				if(limit > 1000) {
 					re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff-(int)(1000*avg_runtime), use_restarts, dom_red, esolt, seed+i, 0);
 					//re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, esolt, aligned, seed+i);
 					objectives[i] = re.objective;
@@ -250,6 +265,10 @@ public class RankingExperiment {
 										
 					avg_runtime += runtimes[i];
 									
+					System.out.println( "x LIMITOUT     " +   limitouts[i] );
+					System.out.println( "x OBJECTIVE    " +   objectives[i] );
+					System.out.println( "x RUNTIME      " +   runtimes[i] );
+					System.out.println( "x NODES        " +   nodes[i] );
 										
 					num_launch++;
 				} else break;
@@ -294,12 +313,12 @@ public class RankingExperiment {
 			avg_optimal /= num_launch;
 											
 										
-			for(int i=0; i<num_launch; i++) {
-				System.out.println( "x LIMITOUT     " +   limitouts[i] );
-				System.out.println( "x OBJECTIVE    " +   objectives[i] );
-				System.out.println( "x RUNTIME      " +   runtimes[i] );
-				System.out.println( "x NODES        " +   nodes[i] );
-			}
+			// for(int i=0; i<num_launch; i++) {
+			// 	System.out.println( "x LIMITOUT     " +   limitouts[i] );
+			// 	System.out.println( "x OBJECTIVE    " +   objectives[i] );
+			// 	System.out.println( "x RUNTIME      " +   runtimes[i] );
+			// 	System.out.println( "x NODES        " +   nodes[i] );
+			// }
 			
 			System.out.println( "d OBJECTIVE    " +   avg_obj );
 				
@@ -329,9 +348,11 @@ public class RankingExperiment {
 		int horizon = 0;
 		for(int t=0; t<num_type; t++) {
 			for(int i=0; i<num_task; ++i) {
-				horizon += (num_task+1) * duration[t][i] / 2;
+				horizon += num_task * duration[t][i];
 			}
 		}
+		
+		//horizon = 200;
 					
 					
 		IntVar[][] starts = VF.boundedMatrix("s", num_type, num_task, 0, horizon, solver);
@@ -356,7 +377,7 @@ public class RankingExperiment {
 					
 		if(dom_red) {
 						
-			System.out.println( "reduce intervals" );
+			//System.out.println( "reduce intervals" );
 						
 			for(int t=0; t<num_type; t++) {
 				//post_random_domain_reduction(starts[t], 0, horizon, solver, seed+t);
@@ -496,16 +517,28 @@ public class RankingExperiment {
 		// X[4] = VF.integer("x5", 3, 6, solver);
 		// X[5] = VF.integer("x6", 1, 6, solver);
 					
-		IntVar[] X = new IntVar[9];
+		// IntVar[] X = new IntVar[9];
+		// X[0] = VF.integer("x1", 1, 2, solver);
+		// X[1] = VF.integer("x2", 1, 2, solver);
+		// X[2] = VF.integer("x3", 1, 3, solver);
+		// X[3] = VF.integer("x4", 2, 3, solver);
+		// X[4] = VF.integer("x5", 1, 4, solver);
+		// X[5] = VF.integer("x6", 3, 6, solver);
+		// X[6] = VF.integer("x7", 2, 7, solver);
+		// X[7] = VF.integer("x8", 4, 7, solver);
+		// X[8] = VF.integer("x9", 4, 7, solver);
+		
+		IntVar[] X = new IntVar[8];
 		X[0] = VF.integer("x1", 1, 2, solver);
 		X[1] = VF.integer("x2", 1, 2, solver);
-		X[2] = VF.integer("x3", 1, 3, solver);
-		X[3] = VF.integer("x4", 2, 3, solver);
-		X[4] = VF.integer("x5", 1, 4, solver);
-		X[5] = VF.integer("x6", 3, 6, solver);
-		X[6] = VF.integer("x7", 2, 7, solver);
-		X[7] = VF.integer("x8", 4, 7, solver);
-		X[8] = VF.integer("x9", 4, 7, solver);
+		X[2] = VF.integer("x3", 2, 3, solver);
+		X[3] = VF.integer("x4", 1, 20, solver);
+		X[4] = VF.integer("x5", 1, 20, solver);
+		X[5] = VF.integer("x6", 1, 20, solver);
+		X[6] = VF.integer("x7", 1, 2, solver);
+		X[7] = VF.integer("x8", 1, 2, solver);
+		//X[8] = VF.integer("x9", 1, 2, solver);
+
 
 					
 		PropRanking propagator = new PropRanking( X, true );
@@ -550,8 +583,20 @@ public class RankingExperiment {
 			for(int i=0; i<N; i++) {
 				dur[t][i] = 1+random.nextInt(4);
 				dem[t][i] = 1+random.nextInt(3);
+				
+				System.out.print(" " + dur[t][i]);
 			}
+			System.out.println();
 		}
+		System.out.println();
+		for(int t=0; t<M; t++) {
+			for(int i=0; i<N; i++) {
+		
+				System.out.print(" " + dem[t][i]);
+			}
+			System.out.println();
+		}
+		System.out.println();
 					
 					
 	}
