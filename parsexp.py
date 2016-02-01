@@ -49,6 +49,9 @@ def plot_data(resfiles, type_exp, stat):
     maxval = None
     
     for filename in resfiles:
+        
+        print 'read', filename
+        
         count = 0
         l = filename.split('.')
         if l[-1] == 'res':
@@ -81,7 +84,7 @@ def plot_data(resfiles, type_exp, stat):
                 sd = d.split()
                 if d[0] == 'd':
                     # print d,
-                    # print 'total', sd[1], '=', sd[2], '\n'
+                    print 'total', sd[1], '=', sd[2], '\n'
                     average[method][length][sd[1]] = sd[2]
                     empty = False
                 elif d[0] == 'x':
@@ -90,6 +93,11 @@ def plot_data(resfiles, type_exp, stat):
                         allpoints[method][sd[1]] = []
                     allpoints[method][sd[1]].append(sd[2])
             num_instance = count/3
+            
+            # ### A SUPPRIMER
+            # average[method][length]['NUMINSTANCE'] = 1000
+            # if type_exp == 'schedule':
+            #     average[method][length]['NUMINSTANCE'] = 50
             
             if not empty and maxlength<length:
                 maxlength = length
@@ -101,24 +109,61 @@ def plot_data(resfiles, type_exp, stat):
             
     X = sorted(list(lengths))
     T = {}.fromkeys(methods)
+    S = {}.fromkeys(methods)
     
     
     for method in methods:
+        
+        #print method, 
+        
         T[method] = []
+        S[method] = []
         for length in X:
-            t = 0
+            t = None
+            s = None
             if average[method].has_key(length):
                 if average[method][length].has_key(stat):
-                    if stat == 'RUNTIME' or stat == 'OPTIMAL':
-                        t = float(average[method][length][stat])
+                    
+                    all_solved = False
+                    if int(average[method][length]['NUMINSTANCE']) == int(average[method][length]['NUMFINISHED']):
+                        all_solved = True
+                    
+                    if all_solved:
+                        if stat == 'RUNTIME' or stat == 'OPTIMAL':
+                            t = float(average[method][length][stat])
+                        else:
+                            t = int(average[method][length][stat])
+                        s = None
                     else:
-                        t = int(average[method][length][stat])
-                    if minval == None or minval > t:
-                        minval = t
-                    if maxval == None or maxval < t:
-                        maxval = t
+                        #s = (int(average[method][length]['NUMINSTANCE']) - int(average[method][length]['NUMFINISHED']))
+                        s = int(average[method][length]['NUMFINISHED'])
+                        t = None
+                        
+                    if t != None:    
+                        if minval == None or minval > t:
+                            minval = t
+                        if maxval == None or maxval < t:
+                            maxval = t
                     
             T[method].append(t)
+            S[method].append(s)
+        
+        for i in range(len(T[method])):
+            if T[method][i] == None:
+                print T[method]
+                T[method] = T[method][:i]
+                print T[method]
+                print
+                break
+        
+        for i in range(len(S[method])):
+            if S[method][-i-1] == None:
+                print S[method]
+                S[method] = S[method][-i:]
+                print S[method]
+                print
+                break        
+                
         
         #T[method] = [float(average[method][length]['RUNTIME']) for length in X if average[method].has_key(length)]
         #if len(T[method]) < len(X):
@@ -169,7 +214,7 @@ def plot_data(resfiles, type_exp, stat):
         print maxlength
         
         X2 = range(X[0], maxlength, 2)
-        Y = [10**x for x in range(-1,10)]
+        Y = [10**x for x in range(0,10)]
         plt.xticks(X2)
         plt.yticks(Y) 
         plt.ylabel('runtime (s)')
@@ -188,13 +233,22 @@ def plot_data(resfiles, type_exp, stat):
             plt.plot(X, [y] * len(X), '--',
                      lw=0.5, color='black', alpha=0.3)   
 
-        plt.text(10.25, 1500, 'Sortedness', color='red', rotation=80)
-        plt.text(11.55, 400, 'Gcc', color='green', rotation=73)
-        plt.text(17.8, 700, 'propagator', color='blue', rotation=73)
+        # plt.text(12.3, 20000, 'Sortedness', color='red', rotation=51)
+        # plt.text(13.75, 8000, 'Gcc', color='green', rotation=53)
+        # plt.text(13.67, 6000, 'propagator', color='blue', rotation=52)
+        
+        plt.text(14.15, 6000, 'Sortedness', color='red', rotation=68)
+        plt.text(10.2, 8000, 'Gcc', color='green', rotation=80)
+        plt.text(16.85, 3000, 'propagator', color='blue', rotation=70)
         
         x1,x2,y1,y2 = plt.axis()
 
-        plt.axis((x1,x2,max(minval, 0.04),maxval+1000))
+        plt.axis((x1,x2,max(minval, 0.02),32400))
+        
+        
+        #ax2 = plt.twinx()
+        #ax2.plot(range(1, 10001, 20), range(500))
+        #ax2.set_ylabel('#solved')
 
     
     
@@ -203,6 +257,10 @@ def plot_data(resfiles, type_exp, stat):
     plt.plot(X[:len(T['gcc'])],T['gcc'],lw=2)
     plt.plot(X[:len(T['sort'])],T['sort'],lw=2)
     
+    plt.plot(X[-len(S['no']):],S['no'],lw=2,linestyle='--',color='blue')
+    plt.plot(X[-len(S['gcc']):],S['gcc'],lw=2,linestyle='--',color='green')
+    plt.plot(X[-len(S['sort']):],S['sort'],lw=2,linestyle='--',color='red')
+    #
     plt.savefig('runtime.png', bbox_inches='tight')
         
 

@@ -132,7 +132,7 @@ def run_experiments(typecor, methods, cutoff, init_length, nruns):
         length += 1
         
         
-def generate_command_lines(typecor, methods, cutoff, init_length, limit, nruns, suffix):
+def generate_command_lines(typecor, methods, cutoff, init_length, limit, nruns, suffix, seed):
     
     red_type = 0.5
     if suffix == 'rand':
@@ -144,12 +144,12 @@ def generate_command_lines(typecor, methods, cutoff, init_length, limit, nruns, 
             cmdline = [cmd for cmd in chocoprefix]
             
             if typecor == 'schedule':
-                cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), '1234', '8', str(nruns), str(red_type), str(False)]
+                cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), str(seed), '8', str(nruns), str(red_type), str(False)]
             else:
-                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), '1234', '8', str(nruns), str(red_type), str(True)]
+                cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), str(seed), '8', str(nruns), str(red_type), str(True)]
 
             cmdline.extend( cmdargs )
-            outfile = 'experiments/'+typecor+'_'+method+'_'+str(length)+'_'+suffix+'_.res'            
+            outfile = 'experiments/'+typecor+'_'+method+'_'+str(length)+'_'+suffix+'_'+str(seed)+'.res'            
     
             print ' '.join(cmdline), '>', outfile, ';'
         
@@ -162,9 +162,12 @@ if __name__ == '__main__':
         #print "run experiments"
         #run_experiments('schedule', ['no', 'gcc', 'sort'], 3600000, 7, 20)
         
-        #generate_command_lines('schedule', ['no', 'gcc', 'sort'], 10800000, 5, 15, 25, 'batch')
-        #generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 10800000, 5, 20, 500, 'sat')
-        generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 10800000, 5, 20, 500, 'rand')
+        for seed in range(100,1100,100):
+            generate_command_lines('schedule', ['no', 'gcc', 'sort'], 1800000, 5, 15, 5, 'batch', seed)
+        for seed in range(100,5100,100):
+            generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 1800000, 5, 20, 20, 'sat', seed)
+        for seed in range(100,5100,100):
+            generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 1800000, 5, 20, 20, 'rand', seed)
 
 
 

@@ -88,6 +88,10 @@ public class RankingExperiment {
 		boolean aligned = (args[11].equals("True"));
 
 
+		//int halfanour = 1800000;
+		//int halfanhour = 1800000;
+		int halfanhour = 	time_cutoff;
+
 		if(!schedule) {
 									
 			//System.out.println(num_exp);
@@ -114,7 +118,9 @@ public class RankingExperiment {
 					
 											
 											
-					int limit = time_cutoff-(int)(1000*avg_runtime);
+					// int limit = time_cutoff-(int)(1000*avg_runtime);
+					// if(limit>halfanhour)
+					int	limit = halfanhour;
 					
 					if(limit>1000) {
 						
@@ -247,7 +253,9 @@ public class RankingExperiment {
 										
 				re.generate_tasks(dur, dem, seed+i);
 										
-				int limit = time_cutoff-(int)(1000*avg_runtime);
+				// int limit = time_cutoff-(int)(1000*avg_runtime);
+				// if(limit>halfanhour)
+				int	limit = halfanhour;
 				
 				if(limit > 1000) {
 					re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff-(int)(1000*avg_runtime), use_restarts, dom_red, esolt, seed+i, 0);
@@ -584,19 +592,19 @@ public class RankingExperiment {
 				dur[t][i] = 1+random.nextInt(4);
 				dem[t][i] = 1+random.nextInt(3);
 				
-				System.out.print(" " + dur[t][i]);
+				//System.out.print(" " + dur[t][i]);
 			}
-			System.out.println();
+			//System.out.println();
 		}
-		System.out.println();
-		for(int t=0; t<M; t++) {
-			for(int i=0; i<N; i++) {
-		
-				System.out.print(" " + dem[t][i]);
-			}
-			System.out.println();
-		}
-		System.out.println();
+		//System.out.println();
+		// for(int t=0; t<M; t++) {
+		// 	for(int i=0; i<N; i++) {
+		//
+		// 		System.out.print(" " + dem[t][i]);
+		// 	}
+		// 	System.out.println();
+		// }
+		// System.out.println();
 					
 					
 	}
