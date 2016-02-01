@@ -136,8 +136,10 @@ public class PropRanking extends Propagator<IntVar> {
 			increasingLowerBoundVars[i] = vars[i];
 		}
 		
+		//if(!enforceRC) {
 		filter = new AlgoRankingBC(aCause);
 		filter.reset(vars);
+		//}
 	}
 	
 	@Override
@@ -182,6 +184,7 @@ public class PropRanking extends Propagator<IntVar> {
 	}
 	
 
+
 	
 	@Override
 	public void propagate(int evtmask) throws ContradictionException {
@@ -192,6 +195,7 @@ public class PropRanking extends Propagator<IntVar> {
 			System.out.println("propagate Ranking " + ncalls);
 		}
 		
+		
 		upperBoundPruning();
 		filter.filter();
 		
@@ -200,6 +204,10 @@ public class PropRanking extends Propagator<IntVar> {
 				System.out.print( " " + increasingLowerBoundVars[j].toString() );
 			}
 			System.out.println();
+		}
+		
+		if(enforceRC) {
+			probeRC();
 		}
 		
 	}

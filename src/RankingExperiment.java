@@ -61,9 +61,9 @@ public class RankingExperiment {
 								
 		RankingExperiment re = new RankingExperiment();
 		
-		//
-		// re.test();
-		// System.exit(1);
+
+		re.test();
+		System.exit(1);
 
 
 		int length = Integer.parseInt(args[0]);
@@ -536,20 +536,27 @@ public class RankingExperiment {
 		// X[7] = VF.integer("x8", 4, 7, solver);
 		// X[8] = VF.integer("x9", 4, 7, solver);
 		
-		IntVar[] X = new IntVar[8];
+		// IntVar[] X = new IntVar[8];
+		// X[0] = VF.integer("x1", 1, 2, solver);
+		// X[1] = VF.integer("x2", 1, 2, solver);
+		// X[2] = VF.integer("x3", 2, 3, solver);
+		// X[3] = VF.integer("x4", 1, 20, solver);
+		// X[4] = VF.integer("x5", 1, 20, solver);
+		// X[5] = VF.integer("x6", 1, 20, solver);
+		// X[6] = VF.integer("x7", 1, 2, solver);
+		// X[7] = VF.integer("x8", 1, 2, solver);
+		// //X[8] = VF.integer("x9", 1, 2, solver);
+		
+		IntVar[] X = new IntVar[4];
 		X[0] = VF.integer("x1", 1, 2, solver);
-		X[1] = VF.integer("x2", 1, 2, solver);
+		X[1] = VF.integer("x2", 2, 3, solver);
 		X[2] = VF.integer("x3", 2, 3, solver);
-		X[3] = VF.integer("x4", 1, 20, solver);
-		X[4] = VF.integer("x5", 1, 20, solver);
-		X[5] = VF.integer("x6", 1, 20, solver);
-		X[6] = VF.integer("x7", 1, 2, solver);
-		X[7] = VF.integer("x8", 1, 2, solver);
-		//X[8] = VF.integer("x9", 1, 2, solver);
+		X[3] = VF.integer("x4", 4, 4, solver);
+
 
 
 					
-		PropRanking propagator = new PropRanking( X, true );
+		//PropRanking propagator = new PropRanking( X, true );
 					
 							
 					
@@ -558,21 +565,23 @@ public class RankingExperiment {
 		cg_algo.reset(X);
 					
 					
-		cg_algo.sortIt();
+		cg_algo.computeHallInt();
 					
-		//cg_algo.print_structure();
-					
-		try {
-			cg_algo.computeHall();
-		} catch(ContradictionException e) {
-			System.out.println("wipe out!");
-		}
-					
-		try {
-			cg_algo.filterFromRules();
-		} catch(ContradictionException e) {
-			System.out.println("wipe out!");
-		}
+		// cg_algo.sortIt();
+		//
+		// //cg_algo.print_structure();
+		//
+		// try {
+		// 	cg_algo.computeHall();
+		// } catch(ContradictionException e) {
+		// 	System.out.println("wipe out!");
+		// }
+		//
+		// try {
+		// 	cg_algo.filterFromRules();
+		// } catch(ContradictionException e) {
+		// 	System.out.println("wipe out!");
+		// }
 					
 					
 	}				

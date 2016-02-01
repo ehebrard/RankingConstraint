@@ -44,6 +44,14 @@ public class AlgoRankingBC {
 	private int[][] rule; // list of a,b,k's 
 	private int num_rule;
 	
+	
+	private int [] cur_a;
+	private boolean [] is_in;
+	private int num_h;
+	private int [] lbs;
+	private int nlb;
+	private int [] ck;
+	
 
 	public AlgoRankingBC(Propagator cause) {
 		this.aCause = cause;
@@ -78,7 +86,13 @@ public class AlgoRankingBC {
 		
 		
 		rule = new int[n][3];
+		
+		ck = new int[n];
+		lbs = new int[n];
+		cur_a = new int[n];
+		is_in = new boolean[n];
 	}
+	
 
 	//****************************************************************************************************************//
 	//****************************************************************************************************************//
@@ -539,6 +553,85 @@ public class AlgoRankingBC {
 		
 	}
 
+	
+	public void computeHallInt() {
+		int n = vars.length;
+		IntVar vt;
+		for (int i = 0; i < n; i++) {
+			vt = intervals[i].var;
+			intervals[i].lb = vt.getLB();
+			intervals[i].ub = vt.getUB();
+		}
+		sorter.sort(minsorted,n,SORT.MIN);
+		sorter.sort(maxsorted,n,SORT.MAX);
+		
+		int min, max, lb;
+		int last=-1;
+		nlb = 0;
+		
+		for(int i=0; i<n; i++) {
+			min = minsorted[i].lb;
+			
+			// System.out.print( minsorted[i].var + ": " );
+			// System.out.println( min );
+			//	
+			if(min != last) {
+				lbs[nlb++] = min;
+				last = min;
+			}
+		}
+
+		last = -1;
+		for(int i=0; i<n; i++) {
+			max = maxsorted[i].ub;
+			min = maxsorted[i].lb;
+			
+			
+			//System.out.print( min + ".." + max + ": " );
+			
+			
+			if(max>last) {
+				//flush list of Halls
+				for(int j=0; j<num_h; j++) {
+					System.out.println("["+ cur_a[j] + "," + last + "] (" + (ck[cur_a[j]] - (last-cur_a[j]+1)) + ")");
+					is_in[cur_a[j]] = false;
+				}
+				num_h = 0;
+				last = max;
+			}
+			
+			for(int j=0; j<nlb; j++) {
+				lb = lbs[j];
+				if(lb<=min) {
+					if(++ck[lb] >= (max-lb+1)) {
+						
+						//System.out.println("?? ["+ cur_a[j] + "," + max + "] (" + (ck[lb] - (max-lb+1)) + ")");
+						
+						if(!is_in[lb]) {
+							cur_a[num_h++] = lb;
+							is_in[lb] = true;
+						}
+					}
+				} else break;
+			}
+			
+		}
+		
+		for(int j=0; j<num_h; j++) {
+			System.out.println("["+ cur_a[j] + "," + last + "] (" + (ck[cur_a[j]] - (last-cur_a[j]+1)) + ")");
+		}
+		
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public void print_structure() {
 		for(int i=0; i<vars.length; i++) {
