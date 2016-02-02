@@ -16,6 +16,9 @@ import org.chocosolver.solver.search.strategy.ISF;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import util.BinaryHeap;
+import util.Tuple;
+
 import constraint.Ranking;
 
 public class AlgoRankingBC {
@@ -51,6 +54,8 @@ public class AlgoRankingBC {
 	private int [] lbs;
 	private int nlb;
 	private int [] ck;
+	
+	protected BinaryHeap< Tuple< Integer, IntVar > > sortedVars;
 	
 
 	public AlgoRankingBC(Propagator cause) {
@@ -91,6 +96,9 @@ public class AlgoRankingBC {
 		lbs = new int[n];
 		cur_a = new int[n];
 		is_in = new boolean[n];
+		
+		
+		sortedVars = new BinaryHeap< Tuple< Integer, IntVar > >();
 	}
 	
 
@@ -297,10 +305,18 @@ public class AlgoRankingBC {
 		for(int i=0; i<num_rule; i++) {
 			if(rule[i][1] < rule[i][2]) {
 				for(int j=0; j<vars.length; j++) {
+					
 					vars[j].removeInterval(rule[i][1], rule[i][2]-1, aCause);
+
 				}
 			}
 		}
+		
+		if(verbose>0) {
+		for(int j=0; j<vars.length; j++) {
+			System.out.println( maxsorted[j].var );
+		}
+	}
 		
 	}
 
@@ -315,15 +331,15 @@ public class AlgoRankingBC {
 		// rules are ordered so that b_{i+1} > b_i, and therefore c_{i+1} > c_i otherwise [FIND A GOOD REASON, but in any case i+1 would be useless]
 		// moreover, suppose that c_i >= b_{i+1}-1, then a_{i+1} <= a_i, because 1/ a_{i+1} <= b_i otherwise there would be a wipe out, and then, the interval [a_i, b_{i+1}] would dominates [a', b_{i+1}] for all a' \in [a_i, b_i]
 		
-		// if(verify_properties) {
-		// 	for(int i=1; i<num_rule; i++) {
-		// 		if( rule[i][1] <= rule[i-1][1] ) { System.out.println("assert 1"); System.exit(1); };
-		//
-		// 		if( rule[i][2] <= rule[i-1][2] ) { System.out.println("assert 2"); System.exit(1); };
-		//
-		// 		if( rule[i-1][2] >= rule[i][1] && rule[i-1][0] < rule[i][0] ) { System.out.println("assert 3"); System.exit(1); };
-		// 	}
-		// }
+		if(verify_properties) {
+			for(int i=1; i<num_rule; i++) {
+				if( rule[i][1] <= rule[i-1][1] ) { System.out.println("assert 1"); System.exit(1); };
+
+				if( rule[i][2] <= rule[i-1][2] ) { System.out.println("assert 2"); System.exit(1); };
+
+				if( rule[i-1][2] >= rule[i][1] && rule[i-1][0] < rule[i][0] ) { System.out.println("assert 3"); System.exit(1); };
+			}
+		}
 		
 		// since b_i's are in increasing order, there are at most n of them, and if we explore potential culprit ordered by non-decreasing lb, we do not have to look back to previous rules once we move to a new one
 		int l=0; // pointer to the first potential rule
@@ -341,115 +357,115 @@ public class AlgoRankingBC {
 			// assert(ub == minsorted[i].var.getUB());
 			
 			
-			// if(verbose>0) {
-			// 	System.out.println("check if " + minsorted[i].var.toString() + " is culprit");
-			// }
-			//
-			// if(verbose>1) {
-			// 	if(l<num_rule-1) {
-			// 		if(rule[l+1][1]<=lb) {
-			// 			System.out.println("  rule [" + rule[l][1] + ", " + rule[l][2] + "] does not cover lb");
-			// 		}
-			// 	} else {
-			// 		System.out.println("  last rule");
-			// 	}
-			// }
+			if(verbose>0) {
+				System.out.println("check if " + minsorted[i].var.toString() + " is culprit");
+			}
+
+			if(verbose>1) {
+				if(l<num_rule-1) {
+					if(rule[l+1][1]<=lb) {
+						System.out.println("  rule [" + rule[l][1] + ", " + rule[l][2] + "] does not cover lb");
+					}
+				} else {
+					System.out.println("  last rule");
+				}
+			}
 			
 			while(l<num_rule-1 && rule[l+1][1]<=lb) {
 				
 				l++; // find the tightest value for l
 				
-				// if(verbose>1) {
-				// 	if(l<num_rule-1) {
-				// 		System.out.println("  move l-ptr from " + (l-1) + " = [" + rule[l-1][1] + ", " + rule[l-1][2] + "] to " + (l) + " = [" + rule[l][1] + ", " + rule[l][2] + "]");
-				// 	} else {
-				// 		System.out.println("  last rule");
-				// 	}
-				// }
+				if(verbose>1) {
+					if(l<num_rule-1) {
+						System.out.println("  move l-ptr from " + (l-1) + " = [" + rule[l-1][1] + ", " + rule[l-1][2] + "] to " + (l) + " = [" + rule[l][1] + ", " + rule[l][2] + "]");
+					} else {
+						System.out.println("  last rule");
+					}
+				}
 				
 			}
 			
-			// if(verbose>1) {
-			// 	if(rule[l][1]>lb) {
-			// 		System.out.println("  could not cover lb");
-			// 	}
-			// }
+			if(verbose>1) {
+				if(rule[l][1]>lb) {
+					System.out.println("  could not cover lb");
+				}
+			}
 			
 			
 			if(rule[l][1]<=lb) {
 				
-				// if(verbose>1) {
-				// 	System.out.println(" lb covered, check ub ");
-				//
-				// 	if(u<n) {
-				// 		if(rule[u][2]<ub) {
-				// 			System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] too small");
-				// 		} else {
-				// 			System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] large enough");
-				// 		}
-				//
-				// 		if(rule[u][2]>=rule[u+1][1]-1) {
-				// 			System.out.println("   rules [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] are contiguous");
-				// 		} else {
-				// 			System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] have a GAP");
-				// 		}
-				//
-				// 	} else {
-				// 		System.out.println("   last rule");
-				// 	}
-				// }
+				if(verbose>1) {
+					System.out.println(" lb covered, check ub ");
+
+					if(u<n) {
+						if(rule[u][2]<ub) {
+							System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] too small");
+						} else {
+							System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] large enough");
+						}
+
+						if(rule[u][2]>=rule[u+1][1]-1) {
+							System.out.println("   rules [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] are contiguous");
+						} else {
+							System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] have a GAP");
+						}
+
+					} else {
+						System.out.println("   last rule");
+					}
+				}
 				
 				// the rule might apply, check ub
 				u = l;
 				while(u<n && rule[u][2]<ub && rule[u][2]>=rule[u+1][1]-1) {
 					u++;
 					
-					// if(verbose>1) {
-					// 	if(u<n) {
-					// 		if(rule[u][2]<ub) {
-					// 			System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] too small");
-					// 		} else {
-					// 			System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] large enough");
-					// 		}
-					//
-					// 		if(rule[u][2]>=rule[u+1][1]-1) {
-					// 			System.out.println("   rules [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] are contiguous");
-					// 		} else {
-					// 			System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] have a GAP");
-					// 		}
-					//
-					// 	} else {
-					// 		System.out.println("   last rule");
-					// 	}
-					// }
+					if(verbose>1) {
+						if(u<n) {
+							if(rule[u][2]<ub) {
+								System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] too small");
+							} else {
+								System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] large enough");
+							}
+
+							if(rule[u][2]>=rule[u+1][1]-1) {
+								System.out.println("   rules [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] are contiguous");
+							} else {
+								System.out.println("   rule [" + rule[u][1] + ", " + rule[u][2] + "] and [" + rule[u+1][1] + ", " + rule[u+1][2] + "] have a GAP");
+							}
+
+						} else {
+							System.out.println("   last rule");
+						}
+					}
 				}
 
 				if(rule[u][2]>=ub) {
 				
-					// if(verbose>1) {
-					// 	System.out.print("  yes, for rules");
-					// }
+					if(verbose>1) {
+						System.out.print("  yes, for rules");
+					}
 					//
 					// we can prune with respect to the rules r[l],...,r[u]
 					// - we prune the intersection of the [a_i, b_i], that is [r[l].a, r[l].b[ 
 					// - from variables that are not contained in the union, that is [r[u].a, r[u].b[ 
 				
-					// if(verify_properties) {
-					// 	for(int j=l; j<=u; j++) {
-					//
-					// 		if(verbose>1) {
-					// 			System.out.print(" [" + rule[j][1] + ", " + rule[j][2] + "]");
-					// 		}
-					//
-					// 		if( rule[j][0]<rule[j+1][0] ) { System.out.println("assert 4"); System.exit(1); };
-					// 		if( rule[j][1]>rule[j+1][1] ) { System.out.println("assert 5"); System.exit(1); };
-					// 	}
-					// }
-				
-					// if(verbose>1) {
-					// 	System.out.println();
-					// }
-					//
+					if(verify_properties) {
+						for(int j=l; j<=u; j++) {
+
+							if(verbose>1) {
+								System.out.print(" [" + rule[j][1] + ", " + rule[j][2] + "]");
+							}
+
+							if( rule[j][0]<rule[j+1][0] ) { System.out.println("assert 4"); System.exit(1); };
+							if( rule[j][1]>rule[j+1][1] ) { System.out.println("assert 5"); System.exit(1); };
+						}
+					}
+
+					if(verbose>1) {
+						System.out.println();
+					}
+
 					for(int j=0; j<n; j++) {
 						int x_lb = vars[j].getLB();
 						int x_ub = vars[j].getUB();
@@ -459,36 +475,36 @@ public class AlgoRankingBC {
 						
 						boolean disjoint = (rule[l][0] > x_ub || rule[l][1] <= x_lb);
 						
-						// System.out.print( "[" + x_lb + ", " + x_ub + "] is");
-						// if(!included)
-						// 	System.out.print(" not");
-						// System.out.println(" a subset of [" + rule[u][0] + ", " + (rule[u][1]-1) + "]");
-						//
-						// System.out.print( "[" + x_lb + ", " + x_ub + "] is");
-						// if(!disjoint)
-						// 	System.out.print(" not");
-						// System.out.println(" disjoint to [" + rule[l][0] + ", " + (rule[l][1]-1) + "]");
-						
-						
+						System.out.print( "[" + x_lb + ", " + x_ub + "] is");
+						if(!included)
+							System.out.print(" not");
+						System.out.println(" a subset of [" + rule[u][0] + ", " + (rule[u][1]-1) + "]");
+
+						System.out.print( "[" + x_lb + ", " + x_ub + "] is");
+						if(!disjoint)
+							System.out.print(" not");
+						System.out.println(" disjoint to [" + rule[l][0] + ", " + (rule[l][1]-1) + "]");
+
+
 						if( !included && !disjoint ) {
-						
-							// if(verbose>0) {
-							// 	System.out.println(" -> remove [" + rule[l][0] + ", " + (rule[l][1]-1) + "] from " + vars[j].toString());
-							// }
-							//
-						
+	
+							if(verbose>0) {
+								System.out.println(" -> remove [" + rule[l][0] + ", " + (rule[l][1]-1) + "] from " + vars[j].toString());
+							}
+
+
 							if(rule[l][0]<=x_lb) {
 								
-								// if(verbose>0) {
-								// 	System.out.println(" => " + vars[j].toString() + " >= " + rule[l][1]);
-								// }
+								if(verbose>0) {
+									System.out.println(" => " + vars[j].toString() + " >= " + rule[l][1]);
+								}
 								
 								vars[j].updateLowerBound(rule[l][1], aCause);
 							} else if(rule[l][1]>x_ub) {
 								
-								// if(verbose>0) {
-								// 	System.out.println(" => " + vars[j].toString() + " <= " + (rule[l][0]-1));
-								// }
+								if(verbose>0) {
+									System.out.println(" => " + vars[j].toString() + " <= " + (rule[l][0]-1));
+								}
 								
 								vars[j].updateUpperBound(rule[l][0]-1, aCause);
 							} else {									
@@ -627,8 +643,142 @@ public class AlgoRankingBC {
 	
 	
 	
+	public void probeRC() throws ContradictionException {
+
+		int n = vars.length;
+		IntVar vt;
+		int old_lb;
+		int old_ub;
+		
+		boolean debug = false;
+		boolean pruning = false;
+		
+
+		for (int i = 0; i < n; i++) {
+			vt = intervals[i].var;
+			intervals[i].lb = vt.getLB();
+			intervals[i].ub = vt.getUB();
+		}
+		
+		for (int i = 0; i < n; i++) {
+			old_lb = intervals[i].lb;
+			old_ub = intervals[i].ub;
+			for (int j = old_lb; j <= old_ub; j++) {	
+				
+				if(intervals[i].var.contains(j)) {
+				
+					intervals[i].lb = j;
+					intervals[i].ub = j;
+				
+					if(debug)
+						System.out.print(" " + i + ":" + j);
+				
+					if(!probe()) {
+						intervals[i].var.removeValue(j, aCause);
+					
+						if(debug) {
+							System.out.print("*");
+							pruning = true;
+						}
+					}
+				
+				}
+			}
+			intervals[i].lb = old_lb;
+			intervals[i].ub = old_ub;
+			
+			if(debug)
+				System.out.println();
+		}
+		
+		if(debug) {
+			System.out.println();
+			if(pruning) {
+				System.exit(1);
+			}
+		
+		}
+	}	
 	
+	public boolean probe()  {
+ 	
+		// if(verbose>2) {
+	// 		System.out.println("Disentailment");
+	// 	}
 	
+
+		//counting_sort(order, minsorted);
+		//sorter.sort(maxsorted,n,SORT.MAX);
+ 	
+		int k = 1, nxt_k;
+		int ilb_ptr = 0;
+		
+		
+		sorter.sort(minsorted,vars.length,SORT.MIN);
+ 	
+		//num_rule = 0;
+		//num_pruning = 0;
+		//sortByIncreasingLowerBound();
+ 	
+ 	
+		if(verbose>2) {
+			System.out.println("greedy:");
+		}
+ 	
+
+		while(k <= vars.length) {
+			if(verbose>2) {
+				System.out.println("assign " + k + " to:");
+			}
+ 		
+			nxt_k = k+1;
+ 		
+			// add variables whose domain contains k in the binary heap
+			while( ilb_ptr < vars.length && minsorted[ilb_ptr].lb<=k && minsorted[ilb_ptr].ub>=k ) {	
+				//Tuple< Integer, IntVar > t = new Tuple< Integer, IntVar >( increasingLowerBoundVars[ilb_ptr].getUB(), increasingLowerBoundVars[ilb_ptr] );
+				Tuple< Integer, IntVar > t = new Tuple< Integer, IntVar >( minsorted[ilb_ptr].ub, minsorted[ilb_ptr].var );
+				
+				//increasingLowerBoundVars[ilb_ptr].getUB(), increasingLowerBoundVars[ilb_ptr] );
+ 			
+				//System.out.print(" (+" + increasingLowerBoundVars[ilb_ptr].toString() + ")");
+ 			
+ 			
+				sortedVars.add(t);
+				ilb_ptr++;
+			}
+ 			
+ 		
+			if(sortedVars.isEmpty()) {
+				return false;
+			}
+ 		
+			Tuple< Integer, IntVar > Xi = sortedVars.remove();
+	
+			//System.out.print(" (-" + Xi.second.toString() + ")");
+	
+			if(verbose>2) {
+				System.out.println("  " + Xi.second.toString());
+			}
+ 		
+			// compute the set M of variables which we won't be able to assign to a new "k" value 
+			while( !sortedVars.isEmpty()	&& sortedVars.peek().first < nxt_k ) {
+				Tuple< Integer, IntVar > Xj = sortedVars.remove();
+ 			
+				//System.out.println(" (-" + Xi.second.toString() + ")");
+				if(Xj.first < k) return false;
+				nxt_k++;
+ 			
+				if(verbose>2) {
+					System.out.println("  " + Xj.second.toString() + "(" + nxt_k + ")");
+				}
+
+			}
+ 		
+			k = nxt_k;
+		}
+
+		return true;
+	}
 	
 	
 	

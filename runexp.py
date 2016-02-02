@@ -30,6 +30,7 @@ def get_cmdline():
     parser.add_argument('--runs',type=int,default=1,help='number of runs')
     parser.add_argument('--prune',type=float,default=0,help='randomly prune bounds (value controls embedded solution type)')
     parser.add_argument('--aligned',action='store_true',help='whether embedded solutions should be aligned')
+    parser.add_argument('--probe',action='store_true',help='use probing')
 
     args = parser.parse_args()
 
@@ -51,7 +52,7 @@ def get_cmdline():
         if "outcome" in things_to_show:
             showopt += 32
     
-    cmdargs = [str(args.length), str(args.rank), args.type, str(args.decomp), str(args.schedule), str(args.time), str(args.restart), str(args.seed), str(showopt), str(args.runs), str(args.prune), str(args.aligned)] #, args.show, str(args.time), str(args.node), str(args.seed)]
+    cmdargs = [str(args.length), str(args.rank), args.type, str(args.decomp), str(args.schedule), str(args.time), str(args.restart), str(args.seed), str(showopt), str(args.runs), str(args.prune), str(args.aligned), str(args.probe)] #, args.show, str(args.time), str(args.node), str(args.seed)]
     
     #chococmd = ['java', '-ea', '-cp', 'lib/choco-solver-3.3.1.jar:lib/trove-3.0.0.jar:lib/slf4j-1.7.13/slf4j-simple-1.7.13.jar:lib/slf4j-1.7.13/slf4j-api-1.7.13.jar:out:.', 'RankingExperiment']
     
@@ -144,7 +145,7 @@ def generate_command_lines(typecor, methods, cutoff, init_length, limit, nruns, 
             cmdline = [cmd for cmd in chocoprefix]
             
             if typecor == 'schedule':
-                cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), str(seed), '8', str(nruns), str(red_type), str(False)]
+                cmdargs = [str(length), str(False), typecor, method, str(True), str(cutoff), str(True), str(seed), '8', str(nruns), str(red_type), str(False), str(method=='probe')]
             else:
                 cmdargs = [str(length), str(False), typecor, method, str(False), str(cutoff), str(False), str(seed), '8', str(nruns), str(red_type), str(True)]
 
@@ -162,12 +163,12 @@ if __name__ == '__main__':
         #print "run experiments"
         #run_experiments('schedule', ['no', 'gcc', 'sort'], 3600000, 7, 20)
         
-        for seed in range(100,1100,100):
-            generate_command_lines('schedule', ['no', 'gcc', 'sort'], 1800000, 5, 15, 5, 'batch', seed)
-        for seed in range(100,5100,100):
-            generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 1800000, 5, 20, 20, 'sat', seed)
-        for seed in range(100,5100,100):
-            generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 1800000, 5, 20, 20, 'rand', seed)
+        for seed in range(100,2600,100):
+            generate_command_lines('schedule', ['no', 'gcc', 'sort'], 1800000, 5, 15, 2, 'batch', seed)
+        # for seed in range(100,5100,100):
+        #     generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 1800000, 5, 20, 20, 'sat', seed)
+        # for seed in range(100,5100,100):
+        #     generate_command_lines('uncorrelation', ['no', 'gcc', 'sort'], 1800000, 5, 20, 20, 'rand', seed)
 
 
 

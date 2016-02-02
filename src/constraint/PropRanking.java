@@ -168,6 +168,9 @@ public class PropRanking extends Propagator<IntVar> {
 		for(int j=0; j<vars.length; j++) {
 			int lb = increasingLowerBoundVars[j].getLB()-1;
 			if(lb > j) this.contradiction(null, "impossible");
+			
+			System.out.println(increasingLowerBoundVars[j]); // + ": " + j + " " + lb);
+			
 			if(lb == j) {
 				while(last < j) {
 					
@@ -207,7 +210,7 @@ public class PropRanking extends Propagator<IntVar> {
 		}
 		
 		if(enforceRC) {
-			probeRC();
+			filter.probeRC();
 		}
 		
 	}

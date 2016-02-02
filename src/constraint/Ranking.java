@@ -54,23 +54,24 @@ public class Ranking extends Constraint {
 			RC, BC
 		}
 
-    public Ranking(IntVar[] vars, String type) {
+    public Ranking(IntVar[] vars, boolean type) {
         super("Ranking", createProp(vars, type));
     }
 		
     public Ranking(IntVar[] vars) {
-        super("Ranking", createProp(vars, "RC"));
+        super("Ranking", createProp(vars, false));
     }
 
-	private static Propagator createProp(IntVar[] vars, String consistency) {
+	private static Propagator createProp(IntVar[] vars, boolean rc) {
 		if(vars.length==1){
 			return new PropEqualXC(vars[0], 1);
 		}
 		
-		switch (Ranking.Type.valueOf(consistency)) {
-			case BC: return new PropRanking(vars, false);
-			default: return new PropRanking(vars, true);
-		}
+		return new PropRanking(vars, rc);
+		// switch (Ranking.Type.valueOf(consistency)) {
+		//
+		// 	default: return new PropRanking(vars, true);
+		// }
 	}
 
     public static Constraint[] reformulateSort(IntVar[] vars, Solver solver) {

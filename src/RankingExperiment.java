@@ -61,10 +61,10 @@ public class RankingExperiment {
 								
 		RankingExperiment re = new RankingExperiment();
 		
-
-		re.test();
-		System.exit(1);
-
+		//
+		// re.test();
+		// System.exit(1);
+		//
 
 		int length = Integer.parseInt(args[0]);
 		boolean perm = (args[1].equals("True"));
@@ -86,6 +86,7 @@ public class RankingExperiment {
 		if(esolt>0)
 			dom_red = true;
 		boolean aligned = (args[11].equals("True"));
+		boolean use_probing = (args[12].equals("True"));
 
 
 		//int halfanour = 1800000;
@@ -126,7 +127,7 @@ public class RankingExperiment {
 						
 						System.out.println("run " + (i+1) + " " + esolt + " " + aligned + " for " + limit + "ms");
 						
-						re.footRule(length, perm, type, decomp, limit, 0, false, true, esolt, aligned, seed+i);
+						re.footRule(length, perm, type, decomp, limit, 0, false, true, esolt, aligned, seed+i, use_probing);
 						objectives[i] = re.objective;
 						nodes[i] = re.num_node;
 						backtracks[i] = re.num_backtrack;
@@ -217,7 +218,7 @@ public class RankingExperiment {
 										
 									
 			} else {
-				re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, dom_red, esolt, aligned, seed);
+				re.footRule(length, perm, type, decomp, time_cutoff, showopt, false, dom_red, esolt, aligned, seed, use_probing);
 			}
 		} else {
 
@@ -258,7 +259,7 @@ public class RankingExperiment {
 				int	limit = halfanhour;
 				
 				if(limit > 1000) {
-					re.watScheduling(1, length, dur, dem, 4, decomp, time_cutoff-(int)(1000*avg_runtime), use_restarts, dom_red, esolt, seed+i, 0);
+					re.watScheduling(1, length, dur, dem, 4, decomp, limit, use_restarts, dom_red, esolt, seed+i, 0, use_probing);
 					//re.footRule(length, perm, type, decomp, time_cutoff, 0, false, true, esolt, aligned, seed+i);
 					objectives[i] = re.objective;
 					nodes[i] = re.num_node;
@@ -350,7 +351,7 @@ public class RankingExperiment {
 									
 
 				
-	public void watScheduling(int num_type, int num_task, int[][] duration, int[][] demand, int capacity, int decomp, int time_cutoff, boolean restarts, boolean dom_red, double esolt, int seed, int showopt) {
+	public void watScheduling(int num_type, int num_task, int[][] duration, int[][] demand, int capacity, int decomp, int time_cutoff, boolean restarts, boolean dom_red, double esolt, int seed, int showopt, boolean use_probing) {
 		Solver solver = new Solver("Scheduling");
 					
 		int horizon = 0;
@@ -380,7 +381,7 @@ public class RankingExperiment {
 			}
 		}
 					
-		IntVar[][] position = VF.integerMatrix("R", num_type, num_task, 1, num_task, solver);
+		IntVar[][] position = VF.enumeratedMatrix("R", num_type, num_task, 1, num_task, solver);
 					
 					
 		if(dom_red) {
@@ -434,7 +435,7 @@ public class RankingExperiment {
 			} else if(decomp==2) {
 				solver.post( Ranking.reformulateSort( position[t], solver ) );
 			} else {
-				solver.post( new Ranking( position[t] ) );
+				solver.post( new Ranking( position[t], use_probing ) );
 			}
 		}
 
@@ -509,49 +510,49 @@ public class RankingExperiment {
 		Solver solver = new Solver("test");
 					
 		// IntVar[] X = new IntVar[7];
-		// X[0] = VF.integer("x1", 1, 7, solver);
-		// X[1] = VF.integer("x2", 1, 7, solver);
-		// X[2] = VF.integer("x3", 2, 4, solver);
-		// X[3] = VF.integer("x4", 2, 3, solver);
-		// X[4] = VF.integer("x5", 3, 4, solver);
-		// X[5] = VF.integer("x6", 1, 7, solver);
-		// X[6] = VF.integer("x7", 3, 4, solver);
+		// X[0] = VF.enumerated("x1", 1, 7, solver);
+		// X[1] = VF.enumerated("x2", 1, 7, solver);
+		// X[2] = VF.enumerated("x3", 2, 4, solver);
+		// X[3] = VF.enumerated("x4", 2, 3, solver);
+		// X[4] = VF.enumerated("x5", 3, 4, solver);
+		// X[5] = VF.enumerated("x6", 1, 7, solver);
+		// X[6] = VF.enumerated("x7", 3, 4, solver);
 					
 		// IntVar[] X = new IntVar[6];
-		// X[0] = VF.integer("x1", 3, 4, solver);
-		// X[1] = VF.integer("x2", 2, 4, solver);
-		// X[2] = VF.integer("x3", 3, 4, solver);
-		// X[3] = VF.integer("x4", 2, 5, solver);
-		// X[4] = VF.integer("x5", 3, 6, solver);
-		// X[5] = VF.integer("x6", 1, 6, solver);
+		// X[0] = VF.enumerated("x1", 3, 4, solver);
+		// X[1] = VF.enumerated("x2", 2, 4, solver);
+		// X[2] = VF.enumerated("x3", 3, 4, solver);
+		// X[3] = VF.enumerated("x4", 2, 5, solver);
+		// X[4] = VF.enumerated("x5", 3, 6, solver);
+		// X[5] = VF.enumerated("x6", 1, 6, solver);
 					
 		// IntVar[] X = new IntVar[9];
-		// X[0] = VF.integer("x1", 1, 2, solver);
-		// X[1] = VF.integer("x2", 1, 2, solver);
-		// X[2] = VF.integer("x3", 1, 3, solver);
-		// X[3] = VF.integer("x4", 2, 3, solver);
-		// X[4] = VF.integer("x5", 1, 4, solver);
-		// X[5] = VF.integer("x6", 3, 6, solver);
-		// X[6] = VF.integer("x7", 2, 7, solver);
-		// X[7] = VF.integer("x8", 4, 7, solver);
-		// X[8] = VF.integer("x9", 4, 7, solver);
+		// X[0] = VF.enumerated("x1", 1, 2, solver);
+		// X[1] = VF.enumerated("x2", 1, 2, solver);
+		// X[2] = VF.enumerated("x3", 1, 3, solver);
+		// X[3] = VF.enumerated("x4", 2, 3, solver);
+		// X[4] = VF.enumerated("x5", 1, 4, solver);
+		// X[5] = VF.enumerated("x6", 3, 6, solver);
+		// X[6] = VF.enumerated("x7", 2, 7, solver);
+		// X[7] = VF.enumerated("x8", 4, 7, solver);
+		// X[8] = VF.enumerated("x9", 4, 7, solver);
 		
 		// IntVar[] X = new IntVar[8];
-		// X[0] = VF.integer("x1", 1, 2, solver);
-		// X[1] = VF.integer("x2", 1, 2, solver);
-		// X[2] = VF.integer("x3", 2, 3, solver);
-		// X[3] = VF.integer("x4", 1, 20, solver);
-		// X[4] = VF.integer("x5", 1, 20, solver);
-		// X[5] = VF.integer("x6", 1, 20, solver);
-		// X[6] = VF.integer("x7", 1, 2, solver);
-		// X[7] = VF.integer("x8", 1, 2, solver);
-		// //X[8] = VF.integer("x9", 1, 2, solver);
+		// X[0] = VF.enumerated("x1", 1, 2, solver);
+		// X[1] = VF.enumerated("x2", 1, 2, solver);
+		// X[2] = VF.enumerated("x3", 2, 3, solver);
+		// X[3] = VF.enumerated("x4", 1, 20, solver);
+		// X[4] = VF.enumerated("x5", 1, 20, solver);
+		// X[5] = VF.enumerated("x6", 1, 20, solver);
+		// X[6] = VF.enumerated("x7", 1, 2, solver);
+		// X[7] = VF.enumerated("x8", 1, 2, solver);
+		// //X[8] = VF.enumerated("x9", 1, 2, solver);
 		
 		IntVar[] X = new IntVar[4];
-		X[0] = VF.integer("x1", 1, 2, solver);
-		X[1] = VF.integer("x2", 2, 3, solver);
-		X[2] = VF.integer("x3", 2, 3, solver);
-		X[3] = VF.integer("x4", 4, 4, solver);
+		X[0] = VF.enumerated("x1", 1, 2, solver);
+		X[1] = VF.enumerated("x2", 2, 3, solver);
+		X[2] = VF.enumerated("x3", 2, 3, solver);
+		X[3] = VF.enumerated("x4", 4, 4, solver);
 
 
 
@@ -787,12 +788,12 @@ public class RankingExperiment {
 				
 
 
-	public void footRule(int N, boolean perm, int type, int decomp, int time_cutoff, int showopt, boolean clue, boolean dom_red, double esolt, boolean aligned, int seed) {
+	public void footRule(int N, boolean perm, int type, int decomp, int time_cutoff, int showopt, boolean clue, boolean dom_red, double esolt, boolean aligned, int seed, boolean use_probing) {
 									
 		Solver solver = new Solver("Correlation");
 
-		IntVar[] X = VF.integerArray("X", N, 1, N, solver);
-		IntVar[] Y = VF.integerArray("Y", N, 1, N, solver);
+		IntVar[] X = VF.enumeratedArray("X", N, 1, N, solver);
+		IntVar[] Y = VF.enumeratedArray("Y", N, 1, N, solver);
 								
 
 		if(dom_red) {
@@ -825,8 +826,8 @@ public class RankingExperiment {
 				solver.post( Ranking.reformulateSort( X, solver ) );
 				solver.post( Ranking.reformulateSort( Y, solver ) );
 			} else {
-				solver.post( new Ranking( X ) );
-				solver.post( new Ranking( Y ) );
+				solver.post( new Ranking( X, use_probing ) );
+				solver.post( new Ranking( Y, use_probing ) );
 			}
 									
 	
