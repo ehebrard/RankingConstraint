@@ -313,10 +313,10 @@ public class AlgoRankingBC {
 		}
 		
 		if(verbose>0) {
-		for(int j=0; j<vars.length; j++) {
-			System.out.println( maxsorted[j].var );
+			for(int j=0; j<vars.length; j++) {
+				System.out.println( maxsorted[j].var );
+			}
 		}
-	}
 		
 	}
 
@@ -475,15 +475,15 @@ public class AlgoRankingBC {
 						
 						boolean disjoint = (rule[l][0] > x_ub || rule[l][1] <= x_lb);
 						
-						System.out.print( "[" + x_lb + ", " + x_ub + "] is");
-						if(!included)
-							System.out.print(" not");
-						System.out.println(" a subset of [" + rule[u][0] + ", " + (rule[u][1]-1) + "]");
-
-						System.out.print( "[" + x_lb + ", " + x_ub + "] is");
-						if(!disjoint)
-							System.out.print(" not");
-						System.out.println(" disjoint to [" + rule[l][0] + ", " + (rule[l][1]-1) + "]");
+						// System.out.print( "[" + x_lb + ", " + x_ub + "] is");
+						// if(!included)
+						// 	System.out.print(" not");
+						// System.out.println(" a subset of [" + rule[u][0] + ", " + (rule[u][1]-1) + "]");
+						//
+						// System.out.print( "[" + x_lb + ", " + x_ub + "] is");
+						// if(!disjoint)
+						// 	System.out.print(" not");
+						// System.out.println(" disjoint to [" + rule[l][0] + ", " + (rule[l][1]-1) + "]");
 
 
 						if( !included && !disjoint ) {

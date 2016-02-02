@@ -169,7 +169,7 @@ public class PropRanking extends Propagator<IntVar> {
 			int lb = increasingLowerBoundVars[j].getLB()-1;
 			if(lb > j) this.contradiction(null, "impossible");
 			
-			System.out.println(increasingLowerBoundVars[j]); // + ": " + j + " " + lb);
+			//System.out.println(increasingLowerBoundVars[j]); // + ": " + j + " " + lb);
 			
 			if(lb == j) {
 				while(last < j) {
