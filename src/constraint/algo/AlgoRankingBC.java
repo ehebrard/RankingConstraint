@@ -674,8 +674,15 @@ public class AlgoRankingBC {
 						System.out.print(" " + i + ":" + j);
 				
 					if(!probe()) {
-						intervals[i].var.removeValue(j, aCause);
-					
+						
+						if(j == intervals[i].var.getLB()) {
+							intervals[i].var.updateLowerBound(j+1, aCause);
+						} else if (j == intervals[i].var.getUB()) {
+							intervals[i].var.updateUpperBound(j-1, aCause);
+						} else {
+							intervals[i].var.removeValue(j, aCause);
+						}
+						
 						if(debug) {
 							System.out.print("*");
 							pruning = true;

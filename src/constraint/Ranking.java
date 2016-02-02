@@ -50,9 +50,13 @@ import java.util.List;
  */
 public class Ranking extends Constraint {
 	
-		public static enum Type {
-			RC, BC
-		}
+		// public static enum Type {
+		// 	RC, BC
+		// }
+		
+    // public Ranking(IntVar[] vars, boolean type, boolean debug) {
+    //     super("Ranking", createProp(vars, type, debug));
+    // }
 
     public Ranking(IntVar[] vars, boolean type) {
         super("Ranking", createProp(vars, type));
@@ -73,6 +77,17 @@ public class Ranking extends Constraint {
 		// 	default: return new PropRanking(vars, true);
 		// }
 	}
+	
+	
+	// private static Propagator createProp(IntVar[] vars, boolean rc, boolean debug) {
+	//
+	// 	if(vars.length==1){
+	// 		return new PropEqualXC(vars[0], 1);
+	// 	}
+	//
+	// 	return new PropRanking(vars, rc, debug);
+	//
+	// }
 
     public static Constraint[] reformulateSort(IntVar[] vars, Solver solver) {
         List<Constraint> cstrs = new ArrayList<>();

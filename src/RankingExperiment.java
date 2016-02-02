@@ -386,7 +386,7 @@ public class RankingExperiment {
 					
 		if(dom_red) {
 						
-			//System.out.println( "reduce intervals" );
+			System.out.println( "reduce intervals" );
 						
 			for(int t=0; t<num_type; t++) {
 				//post_random_domain_reduction(starts[t], 0, horizon, solver, seed+t);
@@ -875,7 +875,8 @@ public class RankingExperiment {
 								
 								
 								
-								
+		// if(example)
+		// 	showopt += 3;
 		set_display(showopt, solver);
 
 	

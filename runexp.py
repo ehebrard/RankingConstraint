@@ -135,9 +135,11 @@ def run_experiments(typecor, methods, cutoff, init_length, nruns):
         
 def generate_command_lines(typecor, methods, cutoff, init_length, limit, nruns, suffix, seed):
     
-    red_type = 0.5
+    red_type = 0
     if suffix == 'rand':
         red_type = 1.0
+    if suffix == 'sat':
+        red_type = 0.5
     
     length = init_length
     for length in range(init_length, limit+1):

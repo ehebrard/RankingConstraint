@@ -71,6 +71,8 @@ public class PropRanking extends Propagator<IntVar> {
 
 
 
+	//private boolean debug;
+
 
 	// protected int[][] rule;
 	// protected int num_rule;
@@ -122,7 +124,24 @@ public class PropRanking extends Propagator<IntVar> {
 
 	}
 	
-	
+		// public PropRanking(IntVar[] vars, boolean rc, boolean debug) {
+		// 	super(vars, PropagatorPriority.LINEAR, false);
+		// 	enforceRC = rc;
+		//
+		// 	count = new int[vars.length];
+		// 	increasingUpperBoundVars = new IntVar[vars.length];
+		// 	increasingLowerBoundVars = new IntVar[vars.length];
+		// 	for(int i=0; i<vars.length; ++i) {
+		// 		increasingUpperBoundVars[i] = vars[i];
+		// 		increasingLowerBoundVars[i] = vars[i];
+		// 	}
+		//
+		// 	//if(!enforceRC) {
+		// 	filter = new AlgoRankingBC(aCause);
+		// 	filter.reset(vars);
+		//
+		// 	this.debug = debug;
+		// }
 	
 	public PropRanking(IntVar[] vars, boolean rc) {
 		super(vars, PropagatorPriority.LINEAR, false);
@@ -192,26 +211,38 @@ public class PropRanking extends Propagator<IntVar> {
 	@Override
 	public void propagate(int evtmask) throws ContradictionException {
 	
-		ncalls++;
+		//ncalls++;
 		
-		if(verbose) {
-			System.out.println("propagate Ranking " + ncalls);
-		}
+		// //if(verbose) {
+		// 	System.out.println("propagate Ranking " + ncalls);
+		// 	//}
+		//
+		// 	if(trace || (debug && ncalls>=107 && ncalls<=108) || (enforceRC && debug && ncalls>=103 && ncalls<=104)) {
+		// 		for(int j=0; j<vars.length; j++) {
+		// 			System.out.print( " " + vars[j].toString() );
+		// 		}
+		// 		System.out.println();
+		// 	}
 		
 		
 		upperBoundPruning();
 		filter.filter();
 		
-		if(trace) {
-			for(int j=0; j<vars.length; j++) {
-				System.out.print( " " + increasingLowerBoundVars[j].toString() );
-			}
-			System.out.println();
-		}
 		
 		if(enforceRC) {
 			filter.probeRC();
 		}
+		
+		//
+		// if(trace || (debug && ncalls>=107 && ncalls<=108) || (enforceRC && debug && ncalls>=103 && ncalls<=104)) {
+		// 	for(int j=0; j<vars.length; j++) {
+		// 		System.out.print( " " + vars[j].toString() );
+		// 	}
+		// 	System.out.println();
+		// }
+		//
+		//
+		// //if(debug && ncalls==108) System.exit(1);
 		
 	}
 	
